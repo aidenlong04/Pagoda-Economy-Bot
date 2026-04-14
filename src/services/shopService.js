@@ -97,8 +97,63 @@ async function buyItem({ discordId, itemName, member, channel }) {
   return item;
 }
 
+// ── Admin CRUD operations ──────────────────────────────────────────────────
+
+async function addShopItem({ name, description, price, stock, actionType, actionData, repeatable }) {
+  return prisma.shopItem.create({
+    data: {
+      name,
+      description,
+      price,
+      stock: stock ?? null,
+      actionType,
+      actionData: actionData || {},
+      repeatable: repeatable ?? true,
+      active: true,
+    }
+  });
+}
+
+async function editShopItem(name, updates) {
+  const item = await prisma.shopItem.findFirst({ where: { name } });
+  if (!item) {
+    throw new Error('Shop item not found');
+  }
+  return prisma.shopItem.update({ where: { id: item.id }, data: updates });
+}
+
+async function removeShopItem(name) {
+  const item = await prisma.shopItem.findFirst({ where: { name } });
+  if (!item) {
+    throw new Error('Shop item not found');
+  }
+  return prisma.shopItem.update({ where: { id: item.id }, data: { active: false } });
+}
+
+async function restockShopItem(name, amount) {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error('Restock amount must be a positive integer');
+  }
+  const item = await prisma.shopItem.findFirst({ where: { name } });
+  if (!item) {
+    throw new Error('Shop item not found');
+  }
+  // If item currently has unlimited stock, just return it
+  if (item.stock === null) {
+    return item;
+  }
+  return prisma.shopItem.update({
+    where: { id: item.id },
+    data: { stock: { increment: amount } }
+  });
+}
+
 module.exports = {
   listShopItems,
   getInventory,
-  buyItem
+  buyItem,
+  addShopItem,
+  editShopItem,
+  removeShopItem,
+  restockShopItem,
 };

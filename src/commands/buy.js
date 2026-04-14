@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { buyItem } = require('../services/shopService');
+const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,13 +8,21 @@ module.exports = {
     .setDescription('Buy a shop item.')
     .addStringOption((option) => option.setName('item').setDescription('Item name').setRequired(true)),
   async execute(interaction) {
-    const item = interaction.options.getString('item', true);
-    await buyItem({
+    const itemName = interaction.options.getString('item', true);
+    const item = await buyItem({
       discordId: interaction.user.id,
-      itemName: item,
+      itemName,
       member: interaction.member,
       channel: interaction.channel
     });
-    await interaction.reply({ content: `Purchased **${item}**.` });
+    const embed = new EmbedBuilder()
+      .setColor(Colors.SUCCESS)
+      .setAuthor({ name: 'Purchase Complete', iconURL: Icons.CREDITS })
+      .setDescription(
+        `Acquired **${item.name}** for **${item.price.toLocaleString()} ${Terms.CURRENCY_ABBREV}**\n\n` +
+        `*${randomFlavor('PURCHASE')}*`
+      )
+      .setTimestamp();
+    await interaction.reply({ embeds: [embed] });
   }
 };

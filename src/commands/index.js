@@ -10,8 +10,9 @@ const quests = require('./quests');
 const achievements = require('./achievements');
 const config = require('./config');
 const event = require('./event');
+const admin = require('./admin');
 
-const commands = [balance, pay, leaderboard, daily, shop, buy, inventory, quests, achievements, config, event];
+const commands = [balance, pay, leaderboard, daily, shop, buy, inventory, quests, achievements, config, event, admin];
 
 async function registerSlashCommands() {
   if (process.env.REGISTER_COMMANDS_ON_START !== 'true') {

@@ -1,9 +1,31 @@
+/**
+ * Default quest templates seeded on first run.
+ * Warframe-themed quest names and descriptions.
+ */
 module.exports = {
   DAILY: [
-    { title: 'Send 50 messages', description: 'Send 50 messages today.', requirementType: 'MESSAGE_COUNT', requirementValue: 50, rewardAp: 120 },
-    { title: 'React 10 times', description: 'React to 10 messages today.', requirementType: 'REACTION_COUNT', requirementValue: 10, rewardAp: 100 }
+    {
+      title: 'Transmissions Intercepted',
+      description: 'Send 50 messages in any channel. The Lotus needs your intel.',
+      requirementType: 'MESSAGE_COUNT',
+      requirementValue: 50,
+      rewardAp: 120,
+    },
+    {
+      title: 'Signal Boost',
+      description: 'React to 10 messages. Boost Tenno morale across the relay.',
+      requirementType: 'REACTION_COUNT',
+      requirementValue: 10,
+      rewardAp: 100,
+    },
   ],
   WEEKLY: [
-    { title: '60 voice minutes', description: 'Spend 60 minutes in voice channels.', requirementType: 'VOICE_MINUTES', requirementValue: 60, rewardAp: 500 }
-  ]
+    {
+      title: 'Void Meditation',
+      description: 'Spend 60 minutes in voice channels. Focus your Void energy.',
+      requirementType: 'VOICE_MINUTES',
+      requirementValue: 60,
+      rewardAp: 500,
+    },
+  ],
 };

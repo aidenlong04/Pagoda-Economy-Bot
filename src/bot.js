@@ -27,11 +27,30 @@ function createBot() {
   client.on('messageReactionAdd', onMessageReactionAdd);
   client.on('voiceStateUpdate', onVoiceStateUpdate);
 
+  // Cron: every minute, check for event state transitions
   cron.schedule('* * * * *', async () => {
     try {
       const status = await closeExpiredEvents();
+
+      // Post rich summary embeds to each event's monitored channels
+      for (const result of status.closed) {
+        for (const channelId of result.channelIds) {
+          try {
+            const channel = await client.channels.fetch(channelId).catch(() => null);
+            if (channel && channel.isTextBased()) {
+              await channel.send({ embeds: [result.summaryEmbed] });
+            }
+          } catch (err) {
+            logger.warn('Failed to post event summary to channel', { channelId, error: err.message });
+          }
+        }
+      }
+
       if (status.activated || status.closed.length) {
-        logger.info('Processed event scheduler tick', status);
+        logger.info('Processed event scheduler tick', {
+          activated: status.activated,
+          closed: status.closed.length,
+        });
       }
     } catch (error) {
       logger.error('Event scheduler failed', { error: error.message });

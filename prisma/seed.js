@@ -11,14 +11,25 @@ async function upsertConfig(key, value) {
 }
 
 async function main() {
+  // ── Runtime config defaults ──────────────────────────────────────────
   await upsertConfig('DAILY_REWARD_AP', process.env.DAILY_REWARD_AP || '100');
   await upsertConfig('DAILY_COOLDOWN_SECONDS', process.env.DAILY_COOLDOWN_SECONDS || '86400');
 
+  // ── Warframe-themed Achievements ─────────────────────────────────────
   const achievements = [
-    { name: 'Bronze Earner', description: 'Earn 1,000 AP total', category: 'EARNING', threshold: 1000, rewardAp: 100 },
-    { name: 'Silver Earner', description: 'Earn 10,000 AP total', category: 'EARNING', threshold: 10000, rewardAp: 500 },
-    { name: 'Bronze Spender', description: 'Spend 1,000 AP in shop', category: 'SPENDING', threshold: 1000, rewardAp: 100 },
-    { name: 'Quest Novice', description: 'Complete 10 quests', category: 'QUEST', threshold: 10, rewardAp: 150 }
+    // Earning milestones (Alliance Standing earned all-time)
+    { name: 'Initiate',           description: 'Earn 1,000 Alliance Standing',    category: 'EARNING', threshold: 1000,   rewardAp: 100 },
+    { name: 'Operative',          description: 'Earn 10,000 Alliance Standing',   category: 'EARNING', threshold: 10000,  rewardAp: 500 },
+    { name: 'Master Tenno',       description: 'Earn 100,000 Alliance Standing',  category: 'EARNING', threshold: 100000, rewardAp: 2500 },
+    // Spending milestones
+    { name: 'Market Regular',     description: 'Spend 1,000 AP in the Tenno Market', category: 'SPENDING', threshold: 1000,  rewardAp: 100 },
+    { name: 'Platinum Patron',    description: 'Spend 25,000 AP in the Tenno Market', category: 'SPENDING', threshold: 25000, rewardAp: 1000 },
+    // Activity milestones
+    { name: 'Comms Officer',      description: 'Send 500 messages',              category: 'ACTIVITY', threshold: 500,   rewardAp: 150 },
+    { name: 'Relay Veteran',      description: 'Send 5,000 messages',            category: 'ACTIVITY', threshold: 5000,  rewardAp: 750 },
+    // Quest milestones
+    { name: 'Mission Rookie',     description: 'Complete 5 Codex Missions',       category: 'QUEST', threshold: 5,  rewardAp: 100 },
+    { name: 'Star Chart Clearer', description: 'Complete 50 Codex Missions',      category: 'QUEST', threshold: 50, rewardAp: 1500 },
   ];
 
   for (const achievement of achievements) {
@@ -29,11 +40,12 @@ async function main() {
     });
   }
 
+  // ── Warframe-themed Quest Seeds ──────────────────────────────────────
   const quests = [
     {
       type: 'DAILY',
-      title: 'Send 50 messages',
-      description: 'Stay active by sending 50 messages.',
+      title: 'Transmissions Intercepted',
+      description: 'Send 50 messages in any channel. The Lotus needs your intel.',
       requirementType: 'MESSAGE_COUNT',
       requirementValue: 50,
       rewardAp: 120,
@@ -41,8 +53,8 @@ async function main() {
     },
     {
       type: 'DAILY',
-      title: 'React to 10 messages',
-      description: 'Use reactions 10 times today.',
+      title: 'Signal Boost',
+      description: 'React to 10 messages. Boost Tenno morale across the relay.',
       requirementType: 'REACTION_COUNT',
       requirementValue: 10,
       rewardAp: 100,
@@ -50,8 +62,8 @@ async function main() {
     },
     {
       type: 'WEEKLY',
-      title: 'Spend 60 minutes in voice',
-      description: 'Spend one hour in voice channels this week.',
+      title: 'Void Meditation',
+      description: 'Spend 60 minutes in voice channels. Focus your Void energy.',
       requirementType: 'VOICE_MINUTES',
       requirementValue: 60,
       rewardAp: 500,
@@ -69,6 +81,8 @@ async function main() {
       }
     });
   }
+
+  console.log('Seed data applied successfully.');
 }
 
 main()

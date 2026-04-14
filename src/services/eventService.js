@@ -1,5 +1,7 @@
+const { EmbedBuilder } = require('discord.js');
 const prisma = require('../db/prisma');
 const { ensureUser, grantAp } = require('./economyService');
+const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
 
 function computeQualifiedUsers(event, userCounts, uniqueCount) {
   if (event.conditionType === 'MIN_UNIQUE_PARTICIPANTS') {
@@ -16,6 +18,46 @@ function computeQualifiedUsers(event, userCounts, uniqueCount) {
   }
 
   return [];
+}
+
+/**
+ * Build a rich embed summarizing a closed event's results.
+ */
+function buildEventSummaryEmbed(event, participants, qualified, qualifiedDiscordIds) {
+  const embed = new EmbedBuilder()
+    .setColor(qualified > 0 ? Colors.SUCCESS : Colors.WARNING)
+    .setAuthor({ name: `${Terms.EVENT} Concluded`, iconURL: Icons.LOTUS })
+    .setTitle(event.name)
+    .setDescription(
+      `${event.description}\n\n*${randomFlavor('EVENT_CLOSE')}*`
+    )
+    .addFields(
+      { name: 'Duration', value: `<t:${ts(event.startTime)}:F> → <t:${ts(event.endTime)}:F>`, inline: false },
+      { name: 'Total Participants', value: String(participants), inline: true },
+      { name: 'Qualified Tenno', value: String(qualified), inline: true },
+      { name: 'Reward', value: `${event.rewardAp} ${Terms.CURRENCY_ABBREV} each`, inline: true },
+      { name: 'Condition', value: `${event.conditionType.replace(/_/g, ' ')} ≥ ${event.conditionValue}`, inline: false }
+    )
+    .setTimestamp();
+
+  if (qualifiedDiscordIds.length > 0 && qualifiedDiscordIds.length <= 30) {
+    embed.addFields({
+      name: 'Rewarded Tenno',
+      value: qualifiedDiscordIds.map((id) => `<@${id}>`).join(', ')
+    });
+  } else if (qualifiedDiscordIds.length > 30) {
+    embed.addFields({
+      name: 'Rewarded Tenno',
+      value: `${qualifiedDiscordIds.slice(0, 30).map((id) => `<@${id}>`).join(', ')}\n...and ${qualifiedDiscordIds.length - 30} more`
+    });
+  }
+
+  embed.setFooter({ text: `Event ID: ${event.id}` });
+  return embed;
+}
+
+function ts(date) {
+  return Math.floor(new Date(date).getTime() / 1000);
 }
 
 async function createEvent(data) {
@@ -77,6 +119,10 @@ async function recordChannelInteraction(discordChannelId, discordUserId, interac
   }
 }
 
+/**
+ * Close expired events, award AP, and return structured results
+ * including per-channel summary embeds.
+ */
 async function closeExpiredEvents() {
   const now = new Date();
   const activations = await prisma.economyEvent.updateMany({
@@ -97,15 +143,31 @@ async function closeExpiredEvents() {
     }
 
     const qualifiedUserIds = computeQualifiedUsers(event, userCounts, userCounts.size);
+    const qualifiedDiscordIds = [];
     for (const userId of qualifiedUserIds) {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user) {
         await grantAp(user.discordId, event.rewardAp, 'EVENT', 'system', { eventId: event.id, eventName: event.name });
+        qualifiedDiscordIds.push(user.discordId);
       }
     }
 
     await prisma.economyEvent.update({ where: { id: event.id }, data: { status: 'CLOSED' } });
-    results.push({ event, participants: userCounts.size, qualified: qualifiedUserIds.length });
+
+    const summaryEmbed = buildEventSummaryEmbed(
+      event,
+      userCounts.size,
+      qualifiedUserIds.length,
+      qualifiedDiscordIds
+    );
+
+    results.push({
+      event,
+      participants: userCounts.size,
+      qualified: qualifiedUserIds.length,
+      summaryEmbed,
+      channelIds: Array.isArray(event.channelIds) ? event.channelIds : [],
+    });
   }
 
   return { activated: activations.count, closed: results };
@@ -113,6 +175,7 @@ async function closeExpiredEvents() {
 
 module.exports = {
   computeQualifiedUsers,
+  buildEventSummaryEmbed,
   createEvent,
   trackEventClick,
   recordChannelInteraction,
