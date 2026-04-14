@@ -10,7 +10,7 @@ Discord economy bot centered around **Alliance Standing (AP)** with economy, que
 - Quest progress tracking (`/quests`) with daily/weekly/custom support
 - Achievement milestones (`/achievements`) with AP and optional role rewards
 - Event system with URL click tracking endpoint
-  - `GET /api/events/:eventId/track?user=<discordId>[&redirect=<url>]`
+  - `GET /api/events/:eventId/track?user=<discordId>[&redirect=<url>]` (returns JSON acknowledgement and optional validated `redirectUrl`)
 - Health endpoint: `GET /health`
 - Runtime config command: `/config set <key> <value>`
 
@@ -45,6 +45,7 @@ Copy `.env.example` to `.env` and fill values:
 - `REGISTER_COMMANDS_ON_START`
 - `DAILY_REWARD_AP`
 - `DAILY_COOLDOWN_SECONDS`
+- `EVENT_REDIRECT_ALLOWLIST` (comma-separated allowed external redirect hosts)
 
 ## Local Setup
 
