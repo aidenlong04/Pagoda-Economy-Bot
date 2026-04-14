@@ -6,6 +6,7 @@ const onMessageReactionAdd = require('./events/messageReactionAdd');
 const onVoiceStateUpdate = require('./events/voiceStateUpdate');
 const onReady = require('./events/ready');
 const { closeExpiredEvents } = require('./services/eventService');
+const { updateWebhookLeaderboard } = require('./services/leaderboardWebhook');
 const logger = require('./logger');
 
 function createBot() {
@@ -62,6 +63,18 @@ function createBot() {
       }
     } catch (error) {
       logger.error('Event scheduler failed', { error: error.message });
+    }
+  });
+
+  // Cron: daily at midnight UTC, update the persistent webhook leaderboard
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      const updated = await updateWebhookLeaderboard();
+      if (updated) {
+        logger.info('Webhook leaderboard updated successfully');
+      }
+    } catch (error) {
+      logger.error('Webhook leaderboard cron failed', { error: error.message });
     }
   });
 

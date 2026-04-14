@@ -1,13 +1,11 @@
 const { REST, Routes } = require('discord.js');
-const balance = require('./balance');
+const standing = require('./standing');
 const leaderboard = require('./leaderboard');
-const daily = require('./daily');
 const market = require('./market');
-const quests = require('./quests');
-const achievements = require('./achievements');
+const profile = require('./profile');
 const admin = require('./admin');
 
-const commands = [balance, leaderboard, daily, market, quests, achievements, admin];
+const commands = [standing, leaderboard, market, profile, admin];
 
 async function registerSlashCommands() {
   if (process.env.REGISTER_COMMANDS_ON_START !== 'true') {

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const { listShopItems, buyItem, getInventory } = require('../services/shopService');
 const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
 
@@ -57,20 +57,49 @@ async function handleBrowse(interaction) {
 
   if (!items.length) {
     embed.setDescription('The market is empty. Check back later, Tenno.');
-  } else {
-    const lines = items.map((item) => {
-      const stock = item.stock === null ? '∞' : item.stock;
-      const repeat = item.repeatable ? 'repeatable' : 'one-time';
-      const tag = ACTION_LABELS[item.actionType] || '❓';
-      return `${tag} **${item.name}** — \`${item.price.toLocaleString()} ${Terms.CURRENCY_ABBREV}\`\n` +
-        `${item.description}\n` +
-        `*Stock: ${stock} • ${repeat}*`;
-    });
-    embed.setDescription(lines.join('\n\n'));
+    return interaction.reply({ embeds: [embed] });
   }
 
-  embed.setFooter({ text: `Use /market buy <item> to purchase • ${Terms.CURRENCY_NAME}` });
-  await interaction.reply({ embeds: [embed] });
+  const lines = items.map((item) => {
+    const stock = item.stock === null ? '∞' : item.stock;
+    const repeat = item.repeatable ? 'repeatable' : 'one-time';
+    const tag = ACTION_LABELS[item.actionType] || '❓';
+    return `${tag} **${item.name}** — \`${item.price.toLocaleString()} ${Terms.CURRENCY_ABBREV}\`\n` +
+      `${item.description}\n` +
+      `*Stock: ${stock} • ${repeat}*`;
+  });
+  embed.setDescription(lines.join('\n\n'));
+
+  const components = [];
+
+  // Add a select menu for quick-buy if there are purchasable items
+  if (items.length <= 25) {
+    const selectRow = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('market:buy')
+        .setPlaceholder('Quick buy — select an item…')
+        .addOptions(items.map((item) => ({
+          label: item.name,
+          description: `${item.price.toLocaleString()} ${Terms.CURRENCY_ABBREV}${item.stock !== null ? ` • ${item.stock} left` : ''}`,
+          value: item.name,
+          emoji: ACTION_LABELS[item.actionType]?.charAt(0) || '❓'
+        })))
+    );
+    components.push(selectRow);
+  }
+
+  // Navigation buttons
+  const navRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('market:inventory')
+      .setLabel('View Arsenal')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🎒')
+  );
+  components.push(navRow);
+
+  embed.setFooter({ text: `Use the menu below or /market buy <item> to purchase` });
+  await interaction.reply({ embeds: [embed], components });
 }
 
 async function handleBuy(interaction) {
@@ -90,7 +119,21 @@ async function handleBuy(interaction) {
       `*${randomFlavor('PURCHASE')}*`
     )
     .setTimestamp();
-  await interaction.editReply({ embeds: [embed] });
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('market:browse')
+      .setLabel('Back to Market')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🏪'),
+    new ButtonBuilder()
+      .setCustomId('market:inventory')
+      .setLabel('View Arsenal')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🎒')
+  );
+
+  await interaction.editReply({ embeds: [embed], components: [row] });
 }
 
 async function handleInventory(interaction) {
@@ -108,5 +151,13 @@ async function handleInventory(interaction) {
     );
   }
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('market:browse')
+      .setLabel('Browse Market')
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji('🏪')
+  );
+
+  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
 }

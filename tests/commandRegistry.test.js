@@ -1,8 +1,8 @@
 const { commands } = require('../src/commands');
 
 describe('command registry', () => {
-  it('exports exactly 7 commands', () => {
-    expect(commands.length).toBe(7);
+  it('exports exactly 5 commands', () => {
+    expect(commands.length).toBe(5);
   });
 
   it('all commands have data and execute', () => {
@@ -36,5 +36,28 @@ describe('command registry', () => {
     const json = admin.data.toJSON();
     const groupNames = json.options.map((o) => o.name).sort();
     expect(groupNames).toEqual(['config', 'event', 'grant', 'shop']);
+  });
+
+  it('standing command has view and daily subcommands', () => {
+    const standing = commands.find((cmd) => cmd.data.name === 'standing');
+    expect(standing).toBeDefined();
+    const json = standing.data.toJSON();
+    const subNames = json.options.map((o) => o.name).sort();
+    expect(subNames).toEqual(['daily', 'view']);
+  });
+
+  it('profile command has missions and mastery subcommands', () => {
+    const profile = commands.find((cmd) => cmd.data.name === 'profile');
+    expect(profile).toBeDefined();
+    const json = profile.data.toJSON();
+    const subNames = json.options.map((o) => o.name).sort();
+    expect(subNames).toEqual(['mastery', 'missions']);
+  });
+
+  it('leaderboard command exports buildLeaderboardEmbed and pagination helpers', () => {
+    const leaderboard = commands.find((cmd) => cmd.data.name === 'leaderboard');
+    expect(typeof leaderboard.buildLeaderboardEmbed).toBe('function');
+    expect(typeof leaderboard.buildPaginationRow).toBe('function');
+    expect(leaderboard.PAGE_SIZE).toBe(25);
   });
 });
