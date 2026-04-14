@@ -1,0 +1,38 @@
+{
+  "name": "pagoda-economy-bot",
+  "version": "1.0.0",
+  "description": "An economy bot that tracks Alliance Standing based on achievements and quests, uses a shop and scoring mechanics through leaderboards",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "vitest run --globals",
+    "test:watch": "vitest --globals",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.js",
+    "setup": "bash setup.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aidenlong04/Pagoda-Economy-Bot.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aidenlong04/Pagoda-Economy-Bot/issues"
+  },
+  "homepage": "https://github.com/aidenlong04/Pagoda-Economy-Bot#readme",
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "discord.js": "14.26.3",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "node-cron": "4.2.1",
+    "prisma": "6.19.3"
+  },
+  "devDependencies": {
+    "supertest": "7.1.4",
+    "vitest": "4.1.4"
+  }
+}
