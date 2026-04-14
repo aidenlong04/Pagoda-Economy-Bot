@@ -1,8 +1,8 @@
 const { commands } = require('../src/commands');
 
 describe('command registry', () => {
-  it('exports exactly 8 commands', () => {
-    expect(commands.length).toBe(8);
+  it('exports exactly 7 commands', () => {
+    expect(commands.length).toBe(7);
   });
 
   it('all commands have data and execute', () => {

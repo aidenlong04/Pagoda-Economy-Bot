@@ -11,7 +11,6 @@ Themed after the Warframe universe using data structures from [aidenlong04/warfr
 ### Economy
 - Integer-precision AP wallet with serializable transaction isolation
 - `/balance` — View your Standing with a themed embed
-- `/pay <user> <amount>` — Transfer AP to another Tenno
 - `/leaderboard [page]` — Clan Leaderboard with top 25 per page (deferred for large queries)
 - `/daily` — Claim your Daily Tribute (configurable cooldown & reward)
 
@@ -73,13 +72,12 @@ This bot follows [Discord's developer documentation](https://discord.com/develop
 
 ```
 src/
-├── commands/           # 8 slash commands (consolidated)
+├── commands/           # 7 slash commands (consolidated)
 │   ├── admin.js        # /admin shop|config|event|grant
 │   ├── market.js       # /market browse|buy|inventory
 │   ├── balance.js      # /balance
 │   ├── daily.js        # /daily
 │   ├── leaderboard.js  # /leaderboard
-│   ├── pay.js          # /pay
 │   ├── quests.js       # /quests
 │   └── achievements.js # /achievements
 ├── config/
@@ -149,7 +147,6 @@ pm2 install pm2-logrotate
 | Command | Access | Description |
 |---|---|---|
 | `/balance` | Everyone | View Alliance Standing |
-| `/pay <user> <amount>` | Everyone | Transfer AP |
 | `/leaderboard [page]` | Everyone | Top 25 Tenno |
 | `/daily` | Everyone | Daily Tribute |
 | `/market browse` | Everyone | Browse Tenno Market |

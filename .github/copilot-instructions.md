@@ -18,13 +18,12 @@ This is a **Warframe-themed Discord economy bot** built with discord.js v14 and 
 ### Warframe Theming
 All embeds, terminology, and flavor text are centralized in `src/config/warframeTheme.js`. Colors, icons, and terms reference the Warframe universe (Tenno, Lotus, Orokin factions). Theme data originates from the [warframe-item-pull](https://github.com/aidenlong04/warframe-item-pull) repository.
 
-### Command Structure (8 commands total)
+### Command Structure (7 commands total)
 Commands are consolidated to minimize Discord's 100-command limit usage:
 
 | Command | Type | Description |
 |---|---|---|
 | `/balance` | Public | View AP balance |
-| `/pay` | Public | Transfer AP to another user |
 | `/daily` | Public | Claim daily tribute |
 | `/leaderboard` | Public | Paginated clan leaderboard |
 | `/market browse` | Public | Browse Tenno Market |
@@ -57,7 +56,7 @@ src/
 │   ├── index.js        # Command registry + REST registration
 │   ├── admin.js        # /admin (shop, config, event, grant)
 │   ├── market.js       # /market (browse, buy, inventory)
-│   └── ...             # balance, pay, daily, leaderboard, quests, achievements
+│   └── ...             # balance, daily, leaderboard, quests, achievements
 ├── config/
 │   ├── defaultConfig.js
 │   └── warframeTheme.js  # ALL theming constants
