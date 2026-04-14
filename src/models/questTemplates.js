@@ -28,4 +28,13 @@ module.exports = {
       rewardAp: 500,
     },
   ],
+  MONTHLY: [
+    {
+      title: 'Origin System Sweep',
+      description: 'Send 1,000 messages this month. Leave no relay unvisited.',
+      requirementType: 'MESSAGE_COUNT',
+      requirementValue: 1000,
+      rewardAp: 2000,
+    },
+  ],
 };

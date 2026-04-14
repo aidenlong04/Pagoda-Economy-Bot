@@ -6,6 +6,7 @@ const onMessageReactionAdd = require('./events/messageReactionAdd');
 const onVoiceStateUpdate = require('./events/voiceStateUpdate');
 const onReady = require('./events/ready');
 const { closeExpiredEvents } = require('./services/eventService');
+const { deactivateExpiredQuests, resetRecurringQuests } = require('./services/questService');
 const { updateWebhookLeaderboard } = require('./services/leaderboardWebhook');
 const logger = require('./logger');
 
@@ -36,7 +37,7 @@ function createBot() {
   client.on('messageReactionAdd', onMessageReactionAdd);
   client.on('voiceStateUpdate', onVoiceStateUpdate);
 
-  // Cron: every minute, check for event state transitions
+  // Cron: every minute, check for event state transitions + quest expiry/reset
   cron.schedule('* * * * *', async () => {
     try {
       const status = await closeExpiredEvents();
@@ -60,6 +61,13 @@ function createBot() {
           activated: status.activated,
           closed: status.closed.length,
         });
+      }
+
+      // Deactivate expired quests and reset recurring quest progress
+      const expired = await deactivateExpiredQuests();
+      const reset = await resetRecurringQuests();
+      if (expired || reset) {
+        logger.info('Quest maintenance tick', { expired, reset });
       }
     } catch (error) {
       logger.error('Event scheduler failed', { error: error.message });

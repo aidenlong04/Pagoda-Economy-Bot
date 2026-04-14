@@ -43,7 +43,7 @@ function market(title, description) {
 
 /** Prestige/gold embed */
 function prestige(title, description) {
-  return themed(Colors.OROKIN, title, Icons.ALLIANCE).setDescription(description);
+  return themed(Colors.OROKIN, title, Icons.PAGODA_EMBLEM).setDescription(description);
 }
 
 module.exports = { themed, success, warning, error, info, market, prestige };

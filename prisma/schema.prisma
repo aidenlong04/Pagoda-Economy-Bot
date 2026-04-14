@@ -21,6 +21,8 @@ enum TransactionSource {
   TRANSFER
   DAILY
   ACHIEVEMENT
+  MESSAGE
+  VOICE
 }
 
 enum ShopActionType {
@@ -32,7 +34,15 @@ enum ShopActionType {
 enum QuestType {
   DAILY
   WEEKLY
+  MONTHLY
   CUSTOM
+}
+
+enum RecurringSchedule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
 }
 
 enum RequirementType {
@@ -133,15 +143,19 @@ model Purchase {
 }
 
 model Quest {
-  id                String           @id @default(cuid())
+  id                String             @id @default(cuid())
   type              QuestType
   title             String
   description       String
-  requirementType   RequirementType  @map("requirement_type")
-  requirementValue  Int              @map("requirement_value")
-  rewardAp          Int              @map("reward_ap")
-  active            Boolean          @default(true)
-  assignedTo        String?          @map("assigned_to")
+  requirementType   RequirementType    @map("requirement_type")
+  requirementValue  Int                @map("requirement_value")
+  rewardAp          Int                @map("reward_ap")
+  active            Boolean            @default(true)
+  assignedTo        String?            @map("assigned_to")
+  expiresAt         DateTime?          @map("expires_at")
+  recurring         RecurringSchedule  @default(NONE)
+  lastResetAt       DateTime?          @map("last_reset_at")
+  createdBy         String?            @map("created_by")
   progress          QuestProgress[]
 
   @@map("quests")
@@ -169,6 +183,7 @@ model Achievement {
   threshold      Int
   rewardAp       Int                  @map("reward_ap")
   rewardRoleId   String?              @map("reward_role_id")
+  createdBy      String?              @map("created_by")
   users          UserAchievement[]
 
   @@map("achievements")

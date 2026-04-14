@@ -21,16 +21,18 @@ const Colors = {
   ERROR:    0xFF4444,  // Red — errors
 };
 
-// ── Icon URLs (Warframe community CDN thumbnails) ──────────────────────────
-// These are public Warframe Wiki / community CDN assets used widely by
-// Warframe fan projects. They represent faction sigils.
+// ── Icon URLs ──────────────────────────────────────────────────────────────
+// PAGODA_EMBLEM: Golden Pagoda alliance emblem — used as the primary
+// Alliance Standing icon across all economy/standing embeds.
+// Other icons are public Warframe community CDN assets.
 const Icons = {
-  LOTUS:        'https://cdn.warframestat.us/img/lotus.png',
-  TENNO:        'https://cdn.warframestat.us/img/tenno.png',
-  ALLIANCE:     'https://cdn.warframestat.us/img/alliance.png',
-  CREDITS:      'https://cdn.warframestat.us/img/credits.png',
-  VOID_RELIC:   'https://cdn.warframestat.us/img/void-relic.png',
-  CODEX:        'https://cdn.warframestat.us/img/codex.png',
+  PAGODA_EMBLEM: 'https://ik.imagekit.io/qcxbyrkgu/Golden_Pagoda_Emblem-clear.png?updatedAt=1752791247987',
+  LOTUS:         'https://cdn.warframestat.us/img/lotus.png',
+  TENNO:         'https://cdn.warframestat.us/img/tenno.png',
+  ALLIANCE:      'https://cdn.warframestat.us/img/alliance.png',
+  CREDITS:       'https://cdn.warframestat.us/img/credits.png',
+  VOID_RELIC:    'https://cdn.warframestat.us/img/void-relic.png',
+  CODEX:         'https://cdn.warframestat.us/img/codex.png',
 };
 
 // ── Terminology mapping ────────────────────────────────────────────────────

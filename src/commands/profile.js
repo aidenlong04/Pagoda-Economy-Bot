@@ -6,6 +6,7 @@ const { Colors, Icons, Terms } = require('../config/warframeTheme');
 const TYPE_ICONS = {
   DAILY: '📋',
   WEEKLY: '📅',
+  MONTHLY: '📆',
   CUSTOM: '⭐',
 };
 
@@ -65,7 +66,11 @@ async function handleMissions(interaction) {
     const lines = quests.map((quest) => {
       const icon = TYPE_ICONS[quest.type] || '•';
       const state = quest.completed ? '✅ **Completed**' : quest.progressBar;
-      return `${icon} **${quest.title}** (${quest.type})\n${state}\nReward: \`${quest.rewardAp} ${Terms.CURRENCY_ABBREV}\``;
+      const badges = [];
+      if (quest.recurring && quest.recurring !== 'NONE') badges.push(`↻ ${quest.recurring.toLowerCase()}`);
+      if (quest.expiresAt) badges.push(`⏰ <t:${Math.floor(new Date(quest.expiresAt).getTime() / 1000)}:R>`);
+      const badgeLine = badges.length ? `\n${badges.join(' • ')}` : '';
+      return `${icon} **${quest.title}** (${quest.type})\n${state}\nReward: \`${quest.rewardAp} ${Terms.CURRENCY_ABBREV}\`${badgeLine}`;
     });
     embed.setDescription(lines.join('\n\n'));
   }

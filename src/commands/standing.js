@@ -34,7 +34,8 @@ async function handleView(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor(Colors.TENNO)
-    .setAuthor({ name: Terms.BALANCE, iconURL: Icons.CREDITS })
+    .setAuthor({ name: Terms.BALANCE, iconURL: Icons.PAGODA_EMBLEM })
+    .setThumbnail(Icons.PAGODA_EMBLEM)
     .setDescription(`<@${interaction.user.id}>\n\n**${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`)
     .addFields(
       { name: 'Total Earned', value: `${user.totalEarned.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },

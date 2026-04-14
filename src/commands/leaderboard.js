@@ -8,8 +8,8 @@ const PAGE_SIZE = 25;
 function buildLeaderboardEmbed(users, page) {
   const embed = new EmbedBuilder()
     .setColor(Colors.OROKIN)
-    .setAuthor({ name: `${Terms.LEADERBOARD} • Page ${page}`, iconURL: Icons.ALLIANCE })
-    .setThumbnail(Icons.TENNO)
+    .setAuthor({ name: `${Terms.LEADERBOARD} • Page ${page}`, iconURL: Icons.PAGODA_EMBLEM })
+    .setThumbnail(Icons.PAGODA_EMBLEM)
     .setTimestamp();
 
   if (!users.length) {

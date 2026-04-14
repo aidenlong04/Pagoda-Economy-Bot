@@ -78,7 +78,7 @@ async function settleVoiceSession(userId, oldState, newState) {
     if (brackets > 0) {
       const voiceAp = brackets * apPer5Min;
       try {
-        await grantAp(userId, voiceAp, 'EVENT', userId, { reason: 'voice-activity', minutes, brackets });
+        await grantAp(userId, voiceAp, 'VOICE', userId, { reason: 'voice-activity', minutes, brackets });
       } catch (error) {
         logger.warn('Failed to grant voice AP', { userId, error: error.message });
       }

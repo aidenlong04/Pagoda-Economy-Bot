@@ -55,7 +55,8 @@ async function main() {
       requirementType: 'MESSAGE_COUNT',
       requirementValue: 50,
       rewardAp: 120,
-      active: true
+      active: true,
+      recurring: 'DAILY'
     },
     {
       type: 'DAILY',
@@ -64,7 +65,8 @@ async function main() {
       requirementType: 'REACTION_COUNT',
       requirementValue: 10,
       rewardAp: 100,
-      active: true
+      active: true,
+      recurring: 'DAILY'
     },
     {
       type: 'WEEKLY',
@@ -73,7 +75,18 @@ async function main() {
       requirementType: 'VOICE_MINUTES',
       requirementValue: 60,
       rewardAp: 500,
-      active: true
+      active: true,
+      recurring: 'WEEKLY'
+    },
+    {
+      type: 'MONTHLY',
+      title: 'Origin System Sweep',
+      description: 'Send 1,000 messages this month. Leave no relay unvisited.',
+      requirementType: 'MESSAGE_COUNT',
+      requirementValue: 1000,
+      rewardAp: 2000,
+      active: true,
+      recurring: 'MONTHLY'
     }
   ];
 

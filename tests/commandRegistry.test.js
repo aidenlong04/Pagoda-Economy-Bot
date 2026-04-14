@@ -31,11 +31,11 @@ describe('command registry', () => {
     expect(typeof market.autocomplete).toBe('function');
   });
 
-  it('admin command has shop, config, event, and grant subcommand groups', () => {
+  it('admin command has shop, config, event, grant, quest, and achievement subcommand groups', () => {
     const admin = commands.find((cmd) => cmd.data.name === 'admin');
     const json = admin.data.toJSON();
     const groupNames = json.options.map((o) => o.name).sort();
-    expect(groupNames).toEqual(['config', 'event', 'grant', 'shop']);
+    expect(groupNames).toEqual(['achievement', 'config', 'event', 'grant', 'quest', 'shop']);
   });
 
   it('standing command has view and daily subcommands', () => {

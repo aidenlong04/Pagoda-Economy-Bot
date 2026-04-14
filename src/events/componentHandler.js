@@ -11,7 +11,7 @@ const { listShopItems, buyItem, getInventory } = require('../services/shopServic
 const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
 const { buildLeaderboardEmbed, buildPaginationRow, PAGE_SIZE } = require('../commands/leaderboard');
 
-const TYPE_ICONS = { DAILY: '📋', WEEKLY: '📅', CUSTOM: '⭐' };
+const TYPE_ICONS = { DAILY: '📋', WEEKLY: '📅', MONTHLY: '📆', CUSTOM: '⭐' };
 const CATEGORY_ICONS = { EARNING: '💰', SPENDING: '🛒', ACTIVITY: '💬', QUEST: '📜' };
 const ACTION_LABELS = { ROLE_GRANT: '🏷️ Role', CUSTOM_RESPONSE: '💬 Message', INVENTORY_ITEM: '📦 Item' };
 
@@ -28,7 +28,8 @@ async function handleStandingView(interaction) {
 
   const embed = new EmbedBuilder()
     .setColor(Colors.TENNO)
-    .setAuthor({ name: Terms.BALANCE, iconURL: Icons.CREDITS })
+    .setAuthor({ name: Terms.BALANCE, iconURL: Icons.PAGODA_EMBLEM })
+    .setThumbnail(Icons.PAGODA_EMBLEM)
     .setDescription(`<@${interaction.user.id}>\n\n**${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`)
     .addFields(
       { name: 'Total Earned', value: `${user.totalEarned.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },
@@ -134,7 +135,11 @@ async function handleProfileMissions(interaction) {
     const lines = quests.map((quest) => {
       const icon = TYPE_ICONS[quest.type] || '•';
       const state = quest.completed ? '✅ **Completed**' : quest.progressBar;
-      return `${icon} **${quest.title}** (${quest.type})\n${state}\nReward: \`${quest.rewardAp} ${Terms.CURRENCY_ABBREV}\``;
+      const badges = [];
+      if (quest.recurring && quest.recurring !== 'NONE') badges.push(`↻ ${quest.recurring.toLowerCase()}`);
+      if (quest.expiresAt) badges.push(`⏰ <t:${Math.floor(new Date(quest.expiresAt).getTime() / 1000)}:R>`);
+      const badgeLine = badges.length ? `\n${badges.join(' • ')}` : '';
+      return `${icon} **${quest.title}** (${quest.type})\n${state}\nReward: \`${quest.rewardAp} ${Terms.CURRENCY_ABBREV}\`${badgeLine}`;
     });
     embed.setDescription(lines.join('\n\n'));
   }

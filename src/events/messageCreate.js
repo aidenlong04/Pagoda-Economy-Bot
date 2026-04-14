@@ -36,7 +36,7 @@ module.exports = async function onMessageCreate(message) {
   if (messageAp > 0 && (now - lastGrant) >= cooldownSec * 1000) {
     messageCooldowns.set(message.author.id, now);
     try {
-      await grantAp(message.author.id, messageAp, 'EVENT', message.author.id, { reason: 'message-activity' });
+      await grantAp(message.author.id, messageAp, 'MESSAGE', message.author.id, { reason: 'message-activity' });
     } catch (error) {
       logger.warn('Failed to grant message AP', { userId: message.author.id, error: error.message });
     }

@@ -56,7 +56,45 @@ async function getAchievementProgress(discordId) {
   });
 }
 
+// ── Admin CRUD ─────────────────────────────────────────────────────────────
+
+async function createAchievement({ name, description, category, threshold, rewardAp, rewardRoleId, createdBy }) {
+  return prisma.achievement.create({
+    data: {
+      name,
+      description,
+      category,
+      threshold,
+      rewardAp,
+      rewardRoleId: rewardRoleId || null,
+      createdBy: createdBy || null,
+    }
+  });
+}
+
+async function editAchievement(name, updates) {
+  const achievement = await prisma.achievement.findUnique({ where: { name } });
+  if (!achievement) throw new Error('Achievement not found');
+  return prisma.achievement.update({ where: { name }, data: updates });
+}
+
+async function removeAchievement(name) {
+  const achievement = await prisma.achievement.findUnique({ where: { name } });
+  if (!achievement) throw new Error('Achievement not found');
+  // Delete user unlocks and the achievement itself
+  await prisma.userAchievement.deleteMany({ where: { achievementId: achievement.id } });
+  return prisma.achievement.delete({ where: { name } });
+}
+
+async function listAllAchievements() {
+  return prisma.achievement.findMany({ orderBy: [{ category: 'asc' }, { threshold: 'asc' }] });
+}
+
 module.exports = {
   evaluateAchievements,
-  getAchievementProgress
+  getAchievementProgress,
+  createAchievement,
+  editAchievement,
+  removeAchievement,
+  listAllAchievements,
 };

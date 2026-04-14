@@ -12,6 +12,7 @@ describe('warframeTheme', () => {
     expect(Icons.LOTUS).toMatch(/^https?:\/\//);
     expect(Icons.CREDITS).toMatch(/^https?:\/\//);
     expect(Icons.CODEX).toMatch(/^https?:\/\//);
+    expect(Icons.PAGODA_EMBLEM).toMatch(/^https?:\/\//);
   });
 
   it('exports terminology strings', () => {

@@ -19,8 +19,8 @@ function buildWebhookLeaderboardEmbed(users) {
   const now = new Date();
   const embed = new EmbedBuilder()
     .setColor(Colors.OROKIN)
-    .setAuthor({ name: Terms.LEADERBOARD, iconURL: Icons.ALLIANCE })
-    .setThumbnail(Icons.TENNO)
+    .setAuthor({ name: Terms.LEADERBOARD, iconURL: Icons.PAGODA_EMBLEM })
+    .setThumbnail(Icons.PAGODA_EMBLEM)
     .setFooter({ text: `Auto-updated daily • Last refresh` })
     .setTimestamp(now);
 
@@ -82,7 +82,7 @@ async function updateWebhookLeaderboard() {
     const sent = await webhook.send({
       embeds: [embed],
       username: 'Clan Leaderboard',
-      avatarURL: Icons.ALLIANCE
+      avatarURL: Icons.PAGODA_EMBLEM
     });
     await setConfig(CONFIG_KEY, sent.id);
     return true;
