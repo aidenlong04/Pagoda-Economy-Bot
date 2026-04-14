@@ -9,6 +9,12 @@ describe('leaderboard embed builders', () => {
     { discordId: '333', balance: 1000 },
   ];
 
+  const mockUsersWithStats = [
+    { discordId: '111', balance: 5000, totalEarned: 8000, messageCount: 120, questsCompleted: 5, daysActiveStreak: 3 },
+    { discordId: '222', balance: 3000, totalEarned: 4000, messageCount: 50, questsCompleted: 0, daysActiveStreak: 1 },
+    { discordId: '333', balance: 1000, totalEarned: 0, messageCount: 0, questsCompleted: 0, daysActiveStreak: 0 },
+  ];
+
   it('buildLeaderboardEmbed displays ranked users', () => {
     const embed = buildLeaderboardEmbed(mockUsers, 1);
     const json = embed.toJSON();
@@ -45,6 +51,19 @@ describe('leaderboard embed builders', () => {
     expect(json.color).toBe(Colors.OROKIN);
     expect(json.description).toContain('<@111>');
     expect(json.footer.text).toContain('Auto-updated daily');
+  });
+
+  it('buildWebhookLeaderboardEmbed includes activity stats when present', () => {
+    const embed = buildWebhookLeaderboardEmbed(mockUsersWithStats);
+    const json = embed.toJSON();
+    // User 111 has all stats
+    expect(json.description).toContain('📈 8,000 earned');
+    expect(json.description).toContain('💬 120 msgs');
+    expect(json.description).toContain('📜 5 quests');
+    expect(json.description).toContain('🔥 3d streak');
+    // User 222 has some stats (no quests, streak = 1 so no streak shown)
+    expect(json.description).toContain('💬 50 msgs');
+    // User 333 has no stats — no stat line
   });
 
   it('PAGE_SIZE is 25', () => {

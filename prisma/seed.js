@@ -14,6 +14,12 @@ async function main() {
   // ── Runtime config defaults ──────────────────────────────────────────
   await upsertConfig('DAILY_REWARD_AP', process.env.DAILY_REWARD_AP || '100');
   await upsertConfig('DAILY_COOLDOWN_SECONDS', process.env.DAILY_COOLDOWN_SECONDS || '86400');
+  await upsertConfig('MESSAGE_AP', '1');
+  await upsertConfig('MESSAGE_COOLDOWN_SECONDS', '60');
+  await upsertConfig('MESSAGE_MIN_LENGTH', '4');
+  await upsertConfig('VOICE_AP_PER_5MIN', '5');
+  await upsertConfig('STREAK_BONUS_PERCENT', '10');
+  await upsertConfig('STREAK_BONUS_CAP', '100');
 
   // ── Warframe-themed Achievements ─────────────────────────────────────
   const achievements = [

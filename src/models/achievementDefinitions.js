@@ -4,8 +4,8 @@
  * has crossed the threshold for each category.
  */
 module.exports = {
-  EARNING:  { field: 'totalEarned',    label: 'Standing Earned' },
-  SPENDING: { field: 'totalSpent',     label: 'Standing Spent' },
-  ACTIVITY: { field: 'messageCount',   label: 'Messages Sent' },
+  EARNING:  { field: 'totalEarned',     label: 'Standing Earned' },
+  SPENDING: { field: 'totalSpent',      label: 'Standing Spent' },
+  ACTIVITY: { field: 'messageCount',    label: 'Messages Sent' },
   QUEST:    { field: 'questsCompleted', label: 'Missions Completed' },
 };

@@ -74,8 +74,10 @@ model User {
   totalEarned          Int                @default(0) @map("total_earned")
   totalSpent           Int                @default(0) @map("total_spent")
   messageCount         Int                @default(0) @map("message_count")
+  reactionCount        Int                @default(0) @map("reaction_count")
   voiceMinutes         Int                @default(0) @map("voice_minutes")
   daysActiveStreak     Int                @default(0) @map("days_active_streak")
+  lastDailyAt          DateTime?          @map("last_daily_at")
   questsCompleted      Int                @default(0) @map("quests_completed")
   createdAt            DateTime           @default(now()) @map("created_at")
   transactions         Transaction[]

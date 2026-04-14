@@ -30,7 +30,13 @@ function buildWebhookLeaderboardEmbed(users) {
     const lines = users.map((user, index) => {
       const rank = index + 1;
       const medal = RANK_MEDALS[rank - 1] || `**#${rank}**`;
-      return `${medal} <@${user.discordId}> — **${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`;
+      const stats = [];
+      if (user.totalEarned > 0) stats.push(`📈 ${user.totalEarned.toLocaleString()} earned`);
+      if (user.messageCount > 0) stats.push(`💬 ${user.messageCount.toLocaleString()} msgs`);
+      if (user.questsCompleted > 0) stats.push(`📜 ${user.questsCompleted} quests`);
+      if (user.daysActiveStreak > 1) stats.push(`🔥 ${user.daysActiveStreak}d streak`);
+      const statLine = stats.length > 0 ? `\n> ${stats.join(' • ')}` : '';
+      return `${medal} <@${user.discordId}> — **${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**${statLine}`;
     });
     embed.setDescription(lines.join('\n'));
   }

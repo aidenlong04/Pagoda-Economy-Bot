@@ -3,7 +3,8 @@
  * Each handler receives the interaction and performs the appropriate action.
  */
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getBalance, claimDaily, getLeaderboard } = require('../services/economyService');
+const { getBalance, claimDaily, getLeaderboard, ensureUser } = require('../services/economyService');
+const prisma = require('../db/prisma');
 const { getQuestsForUser } = require('../services/questService');
 const { getAchievementProgress } = require('../services/achievementService');
 const { listShopItems, buyItem, getInventory } = require('../services/shopService');
@@ -17,13 +18,34 @@ const ACTION_LABELS = { ROLE_GRANT: '🏷️ Role', CUSTOM_RESPONSE: '💬 Messa
 // ── Button Handlers ────────────────────────────────────────────────────────
 
 async function handleStandingView(interaction) {
-  const balance = await getBalance(interaction.user.id);
+  const user = await ensureUser(interaction.user.id);
+
+  const recentTxns = await prisma.transaction.findMany({
+    where: { userId: user.id },
+    orderBy: { timestamp: 'desc' },
+    take: 5
+  });
+
   const embed = new EmbedBuilder()
     .setColor(Colors.TENNO)
     .setAuthor({ name: Terms.BALANCE, iconURL: Icons.CREDITS })
-    .setDescription(`<@${interaction.user.id}>\n\n**${balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`)
+    .setDescription(`<@${interaction.user.id}>\n\n**${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`)
+    .addFields(
+      { name: 'Total Earned', value: `${user.totalEarned.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },
+      { name: 'Total Spent', value: `${user.totalSpent.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },
+      { name: 'Daily Streak', value: `🔥 ${user.daysActiveStreak} day${user.daysActiveStreak !== 1 ? 's' : ''}`, inline: true }
+    )
     .setFooter({ text: Terms.CURRENCY_NAME })
     .setTimestamp();
+
+  if (recentTxns.length > 0) {
+    const txnLines = recentTxns.map((txn) => {
+      const sign = txn.amount >= 0 ? '+' : '';
+      const ts = Math.floor(txn.timestamp.getTime() / 1000);
+      return `\`${sign}${txn.amount}\` ${Terms.CURRENCY_ABBREV} — ${txn.source.toLowerCase()} <t:${ts}:R>`;
+    });
+    embed.addFields({ name: 'Recent Activity', value: txnLines.join('\n') });
+  }
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -50,12 +72,17 @@ async function handleStandingDaily(interaction) {
     return interaction.update({ embeds: [embed], components: [] });
   }
 
+  let description = `**+${result.reward.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`;
+  if (result.bonus > 0) {
+    description += `\n*Base: ${result.baseReward} + Streak Bonus: ${result.bonus}*`;
+  }
+  description += `\n🔥 **${result.streak}-day streak!**`;
+  description += `\n\n*${randomFlavor('DAILY_CLAIM')}*`;
+
   const embed = new EmbedBuilder()
     .setColor(Colors.SUCCESS)
     .setAuthor({ name: Terms.DAILY, iconURL: Icons.LOTUS })
-    .setDescription(
-      `**+${result.reward.toLocaleString()} ${Terms.CURRENCY_ABBREV}**\n\n*${randomFlavor('DAILY_CLAIM')}*`
-    )
+    .setDescription(description)
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
