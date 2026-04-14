@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Options, ActivityType } = require('discord.js');
 const cron = require('node-cron');
 const onInteractionCreate = require('./events/interactionCreate');
 const onMessageCreate = require('./events/messageCreate');
@@ -18,7 +18,15 @@ function createBot() {
       GatewayIntentBits.GuildVoiceStates,
       GatewayIntentBits.MessageContent
     ],
-    partials: [Partials.Message, Partials.Channel, Partials.Reaction]
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+    // Cache sweepers — keep memory bounded per Discord.js recommendations
+    sweepers: {
+      ...Options.DefaultSweeperSettings,
+      messages: {
+        interval: 300,   // every 5 min
+        lifetime: 600,   // discard messages older than 10 min
+      },
+    },
   });
 
   client.on('ready', () => onReady(client));

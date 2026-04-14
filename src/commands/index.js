@@ -3,16 +3,12 @@ const balance = require('./balance');
 const pay = require('./pay');
 const leaderboard = require('./leaderboard');
 const daily = require('./daily');
-const shop = require('./shop');
-const buy = require('./buy');
-const inventory = require('./inventory');
+const market = require('./market');
 const quests = require('./quests');
 const achievements = require('./achievements');
-const config = require('./config');
-const event = require('./event');
 const admin = require('./admin');
 
-const commands = [balance, pay, leaderboard, daily, shop, buy, inventory, quests, achievements, config, event, admin];
+const commands = [balance, pay, leaderboard, daily, market, quests, achievements, admin];
 
 async function registerSlashCommands() {
   if (process.env.REGISTER_COMMANDS_ON_START !== 'true') {

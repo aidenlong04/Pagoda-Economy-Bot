@@ -10,6 +10,7 @@ module.exports = {
     .setDescription(`Show the ${Terms.LEADERBOARD} — top 25 Tenno (paginated).`)
     .addIntegerOption((option) => option.setName('page').setDescription('Page number').setMinValue(1)),
   async execute(interaction) {
+    await interaction.deferReply();
     const page = interaction.options.getInteger('page') || 1;
     const users = await getLeaderboard(page, 25);
     const embed = new EmbedBuilder()
@@ -29,6 +30,6 @@ module.exports = {
       embed.setDescription(lines.join('\n'));
     }
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
   }
 };

@@ -1,12 +1,16 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { addShopItem, editShopItem, removeShopItem, restockShopItem } = require('../services/shopService');
+const { setConfig, getConfig } = require('../services/configService');
+const { createEvent } = require('../services/eventService');
+const { grantAp } = require('../services/economyService');
 const { isAdmin } = require('../services/permissions');
 const { Colors, Icons, Terms } = require('../config/warframeTheme');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('admin')
-    .setDescription('Admin shop & bot management commands.')
+    .setDescription('Admin management — shop, config, events, grants (ManageGuild required).')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommandGroup((group) => group
       .setName('shop')
       .setDescription('Manage shop items.')
@@ -47,7 +51,50 @@ module.exports = {
         .setName('restock')
         .setDescription('Restock a shop item.')
         .addStringOption((o) => o.setName('name').setDescription('Item name').setRequired(true))
-        .addIntegerOption((o) => o.setName('amount').setDescription('Stock to add').setRequired(true).setMinValue(1)))),
+        .addIntegerOption((o) => o.setName('amount').setDescription('Stock to add').setRequired(true).setMinValue(1))))
+    .addSubcommandGroup((group) => group
+      .setName('config')
+      .setDescription('Runtime configuration.')
+      .addSubcommand((sub) => sub
+        .setName('set')
+        .setDescription('Set a config key/value pair.')
+        .addStringOption((o) => o.setName('key').setDescription('Config key').setRequired(true))
+        .addStringOption((o) => o.setName('value').setDescription('Config value').setRequired(true)))
+      .addSubcommand((sub) => sub
+        .setName('get')
+        .setDescription('View a config value.')
+        .addStringOption((o) => o.setName('key').setDescription('Config key').setRequired(true))))
+    .addSubcommandGroup((group) => group
+      .setName('event')
+      .setDescription(`Manage ${Terms.EVENT}s.`)
+      .addSubcommand((sub) => sub
+        .setName('create')
+        .setDescription(`Create a timed ${Terms.EVENT}.`)
+        .addStringOption((o) => o.setName('name').setDescription('Event name').setRequired(true))
+        .addStringOption((o) => o.setName('description').setDescription('Description').setRequired(true))
+        .addStringOption((o) => o.setName('start').setDescription('ISO start time').setRequired(true))
+        .addStringOption((o) => o.setName('end').setDescription('ISO end time').setRequired(true))
+        .addIntegerOption((o) => o.setName('reward').setDescription(`${Terms.CURRENCY_ABBREV} reward`).setRequired(true).setMinValue(1))
+        .addStringOption((o) => o
+          .setName('condition')
+          .setDescription('Condition type')
+          .setRequired(true)
+          .addChoices(
+            { name: 'Minimum unique participants', value: 'MIN_UNIQUE_PARTICIPANTS' },
+            { name: 'Individual interaction threshold', value: 'INDIVIDUAL_INTERACTION_THRESHOLD' }
+          ))
+        .addIntegerOption((o) => o.setName('condition_value').setDescription('Condition value').setRequired(true).setMinValue(1))
+        .addStringOption((o) => o.setName('channels').setDescription('Comma-separated channel IDs').setRequired(true))))
+    .addSubcommandGroup((group) => group
+      .setName('grant')
+      .setDescription('Direct AP grants.')
+      .addSubcommand((sub) => sub
+        .setName('ap')
+        .setDescription('Grant AP to a user.')
+        .addUserOption((o) => o.setName('user').setDescription('Recipient').setRequired(true))
+        .addIntegerOption((o) => o.setName('amount').setDescription('AP amount').setRequired(true).setMinValue(1))
+        .addStringOption((o) => o.setName('reason').setDescription('Grant reason')))),
+
   async execute(interaction) {
     if (!isAdmin(interaction)) {
       return interaction.reply({ content: 'Access denied, Tenno. Insufficient clearance.', ephemeral: true });
@@ -57,25 +104,32 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
 
     if (group === 'shop') {
-      if (sub === 'add') {
-        return handleAdd(interaction);
-      }
-      if (sub === 'edit') {
-        return handleEdit(interaction);
-      }
-      if (sub === 'remove') {
-        return handleRemove(interaction);
-      }
-      if (sub === 'restock') {
-        return handleRestock(interaction);
-      }
+      if (sub === 'add') return handleShopAdd(interaction);
+      if (sub === 'edit') return handleShopEdit(interaction);
+      if (sub === 'remove') return handleShopRemove(interaction);
+      if (sub === 'restock') return handleShopRestock(interaction);
+    }
+
+    if (group === 'config') {
+      if (sub === 'get') return handleConfigGet(interaction);
+      if (sub === 'set') return handleConfigSet(interaction);
+    }
+
+    if (group === 'event') {
+      if (sub === 'create') return handleEventCreate(interaction);
+    }
+
+    if (group === 'grant') {
+      if (sub === 'ap') return handleGrantAp(interaction);
     }
 
     return interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
   }
 };
 
-async function handleAdd(interaction) {
+// ── Shop handlers ──────────────────────────────────────────────────────────
+
+async function handleShopAdd(interaction) {
   const actionType = interaction.options.getString('action_type', true);
   const actionData = {};
 
@@ -115,7 +169,7 @@ async function handleAdd(interaction) {
   return interaction.reply({ embeds: [embed] });
 }
 
-async function handleEdit(interaction) {
+async function handleShopEdit(interaction) {
   const name = interaction.options.getString('name', true);
   const updates = {};
   const newName = interaction.options.getString('new_name');
@@ -148,7 +202,7 @@ async function handleEdit(interaction) {
   return interaction.reply({ embeds: [embed] });
 }
 
-async function handleRemove(interaction) {
+async function handleShopRemove(interaction) {
   const name = interaction.options.getString('name', true);
   await removeShopItem(name);
   const embed = new EmbedBuilder()
@@ -159,7 +213,7 @@ async function handleRemove(interaction) {
   return interaction.reply({ embeds: [embed] });
 }
 
-async function handleRestock(interaction) {
+async function handleShopRestock(interaction) {
   const name = interaction.options.getString('name', true);
   const amount = interaction.options.getInteger('amount', true);
   const item = await restockShopItem(name, amount);
@@ -167,6 +221,90 @@ async function handleRestock(interaction) {
     .setColor(Colors.SUCCESS)
     .setAuthor({ name: `${Terms.SHOP_NAME} — Restocked`, iconURL: Icons.CREDITS })
     .setDescription(`**${item.name}** restocked +${amount}\nNew stock: **${item.stock === null ? '∞' : item.stock}**`)
+    .setTimestamp();
+  return interaction.reply({ embeds: [embed] });
+}
+
+// ── Config handlers ────────────────────────────────────────────────────────
+
+async function handleConfigGet(interaction) {
+  const key = interaction.options.getString('key', true);
+  const value = await getConfig(key);
+  const embed = new EmbedBuilder()
+    .setColor(Colors.TENNO)
+    .setAuthor({ name: 'Configuration', iconURL: Icons.CODEX })
+    .addFields({ name: key, value: value ?? '*not set*' })
+    .setTimestamp();
+  return interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+async function handleConfigSet(interaction) {
+  const key = interaction.options.getString('key', true);
+  const value = interaction.options.getString('value', true);
+  await setConfig(key, value);
+  const embed = new EmbedBuilder()
+    .setColor(Colors.SUCCESS)
+    .setAuthor({ name: 'Configuration Updated', iconURL: Icons.CODEX })
+    .addFields({ name: key, value })
+    .setTimestamp();
+  return interaction.reply({ embeds: [embed] });
+}
+
+// ── Event handlers ─────────────────────────────────────────────────────────
+
+async function handleEventCreate(interaction) {
+  const start = new Date(interaction.options.getString('start', true));
+  const end = new Date(interaction.options.getString('end', true));
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+    return interaction.reply({ content: 'Invalid start/end date values.', ephemeral: true });
+  }
+
+  await interaction.deferReply();
+  const event = await createEvent({
+    name: interaction.options.getString('name', true),
+    description: interaction.options.getString('description', true),
+    startTime: start,
+    endTime: end,
+    rewardAp: interaction.options.getInteger('reward', true),
+    conditionType: interaction.options.getString('condition', true),
+    conditionValue: interaction.options.getInteger('condition_value', true),
+    channelIds: interaction.options.getString('channels', true).split(',').map((v) => v.trim()).filter(Boolean)
+  });
+
+  const embed = new EmbedBuilder()
+    .setColor(Colors.LOTUS)
+    .setAuthor({ name: `${Terms.EVENT} Created`, iconURL: Icons.LOTUS })
+    .setTitle(event.name)
+    .setDescription(event.description)
+    .addFields(
+      { name: 'Start', value: `<t:${Math.floor(start.getTime() / 1000)}:F>`, inline: true },
+      { name: 'End', value: `<t:${Math.floor(end.getTime() / 1000)}:F>`, inline: true },
+      { name: 'Reward', value: `${event.rewardAp} ${Terms.CURRENCY_ABBREV}`, inline: true },
+      { name: 'Condition', value: `${event.conditionType.replace(/_/g, ' ')} ≥ ${event.conditionValue}` },
+      { name: 'Tracking URL', value: `\`/api/events/${event.id}/track?user=<discordId>\`` }
+    )
+    .setFooter({ text: `Event ID: ${event.id}` })
+    .setTimestamp();
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
+// ── Grant handler ──────────────────────────────────────────────────────────
+
+async function handleGrantAp(interaction) {
+  const recipient = interaction.options.getUser('user', true);
+  const amount = interaction.options.getInteger('amount', true);
+  const reason = interaction.options.getString('reason') || 'Admin grant';
+
+  const user = await grantAp(recipient.id, amount, 'ADMIN_GRANT', interaction.user.id, { reason });
+  const embed = new EmbedBuilder()
+    .setColor(Colors.OROKIN)
+    .setAuthor({ name: 'AP Grant', iconURL: Icons.CREDITS })
+    .setDescription(`Granted **${amount.toLocaleString()} ${Terms.CURRENCY_ABBREV}** to <@${recipient.id}>`)
+    .addFields(
+      { name: 'Reason', value: reason, inline: true },
+      { name: 'New Balance', value: `${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true }
+    )
     .setTimestamp();
   return interaction.reply({ embeds: [embed] });
 }
