@@ -44,7 +44,6 @@ const Terms = {
   QUEST_LABEL:     'Codex Missions',
   ACHIEVEMENT:     'Mastery Challenge',
   LEADERBOARD:     'Clan Leaderboard',
-  DAILY:           'Daily Tribute',
   EVENT:           'Tactical Alert',
   INVENTORY:       'Arsenal',
   BALANCE:         'Standing',
@@ -52,12 +51,6 @@ const Terms = {
 
 // ── Flavor text pools (randomly selected per embed for variety) ────────────
 const Flavor = {
-  DAILY_CLAIM: [
-    'The Lotus rewards your loyalty, Tenno.',
-    'Another day in the Origin System. Your tribute awaits.',
-    'Ordis has processed your daily stipend. You\'re welcome!',
-    'The Void provides for those who persevere.',
-  ],
   QUEST_COMPLETE: [
     'Mission complete, Tenno. Well done.',
     'Ordis is pleased with your performance!',

@@ -10,26 +10,27 @@ Themed after the Warframe universe using data structures from [aidenlong04/warfr
 
 ### Economy
 - Integer-precision AP wallet with serializable transaction isolation
-- `/standing view` — View your Standing with a themed embed + quick-claim button
-- `/standing daily` — Claim your Daily Tribute with view-balance button
+- `/standing` — View your Standing with a themed embed showing balance, total earned/spent, and recent activity
 - `/leaderboard [page]` — Clan Leaderboard with button-based pagination (Previous/Next)
+- Earn AP through quests, events, messages, voice activity, and admin grants
 
 ### Persistent Webhook Leaderboard
 - Auto-updated daily at midnight UTC via `WebhookClient`
 - Also refreshed on bot startup
 - Posts a single persistent message in a designated channel (edited in-place)
-- Configure via `LEADERBOARD_WEBHOOK_URL` environment variable
+- Configure via `LEADERBOARD_WEBHOOK_URL` and `LEADERBOARD_CHANNEL_ID` environment variables
 
-### Tenno Market (Consolidated `/market` command)
-- `/market browse` — Browse active items with quick-buy select menu and Arsenal button
-- `/market buy <item>` — Purchase with autocomplete item search + navigation buttons
-- `/market inventory` — View your Arsenal with back-to-market button
+### Tenno Market (`/market` command)
+- `/market` — Browse active items with quick-buy select menu and Arsenal button
+- Component-based navigation: buy via select menu, view inventory via button
 
 ### Admin Hub (Consolidated `/admin` command — requires ManageGuild)
 - `/admin shop add|edit|remove|restock` — Full shop CRUD
 - `/admin config get|set` — Runtime configuration
 - `/admin event create` — Create timed Tactical Alerts
 - `/admin grant ap` — Direct AP grants to users
+- `/admin quest create|edit|remove|list` — Quest CRUD with recurring/expiry options
+- `/admin achievement create|edit|remove` — Achievement CRUD with role rewards
 
 ### Codex Profile (Consolidated `/profile` command)
 - `/profile missions` — View active quest progress with visual progress bars + tab navigation
@@ -44,7 +45,7 @@ Themed after the Warframe universe using data structures from [aidenlong04/warfr
 - Conditions: minimum unique participants or individual interaction threshold
 
 ### Discord v2 Components
-- **Buttons** — Navigation between related views (balance ↔ daily, market ↔ inventory, missions ↔ mastery)
+- **Buttons** — Navigation between related views (market ↔ inventory, missions ↔ mastery)
 - **Select Menus** — Quick-buy item selector in market browse
 - **Pagination** — Button-based page navigation on leaderboard (Previous / Page N / Next)
 - Component interactions handled via dedicated `componentHandler.js`
@@ -60,7 +61,6 @@ This bot follows [Discord's developer documentation](https://discord.com/develop
 - **Slash commands only** — no message-prefix commands, ready for verification
 - **Message components** — buttons, select menus for interactive UX (Discord API v2)
 - **`defaultMemberPermissions`** on admin commands — Discord hides them from non-admins natively
-- **Autocomplete** for item names in `/market buy` — reduces failed lookups and API calls
 - **`deferReply()`** for DB-heavy commands — avoids 3-second interaction timeout
 - **Cache sweepers** configured — bounded memory growth via `Options.DefaultSweeperSettings`
 - **Proper `ActivityType` enum** usage — not magic numbers
@@ -75,15 +75,16 @@ This bot follows [Discord's developer documentation](https://discord.com/develop
 - **HTTP:** Express.js 5
 - **Scheduler:** node-cron
 - **Tests:** Vitest
+- **Linting:** ESLint 9
 
 ## Project Structure
 
 ```
 src/
 ├── commands/           # 5 slash commands (consolidated)
-│   ├── admin.js        # /admin shop|config|event|grant
-│   ├── market.js       # /market browse|buy|inventory
-│   ├── standing.js     # /standing view|daily
+│   ├── admin.js        # /admin shop|config|event|grant|quest|achievement
+│   ├── market.js       # /market (browse with quick-buy + inventory button)
+│   ├── standing.js     # /standing (view balance)
 │   ├── profile.js      # /profile missions|mastery
 │   └── leaderboard.js  # /leaderboard (with button pagination)
 ├── config/
@@ -126,10 +127,9 @@ Copy `.env.example` to `.env` and fill values:
 | `BOT_LOG_CHANNEL_ID` | Optional Discord channel for error logs |
 | `ADMIN_ROLE_ID` | Optional role ID for admin commands |
 | `REGISTER_COMMANDS_ON_START` | `true` to register slash commands on boot |
-| `DAILY_REWARD_AP` | Daily tribute reward (default: 100) |
-| `DAILY_COOLDOWN_SECONDS` | Daily cooldown in seconds (default: 86400) |
 | `EVENT_REDIRECT_ALLOWLIST` | Comma-separated allowed redirect hosts |
 | `LEADERBOARD_WEBHOOK_URL` | Discord webhook URL for persistent leaderboard (optional) |
+| `LEADERBOARD_CHANNEL_ID` | Channel ID for persistent leaderboard |
 
 ## Local Setup
 
@@ -161,18 +161,17 @@ pm2 install pm2-logrotate
 
 | Command | Access | Description |
 |---|---|---|
-| `/standing view` | Everyone | View Alliance Standing |
-| `/standing daily` | Everyone | Daily Tribute |
+| `/standing` | Everyone | View Alliance Standing |
 | `/leaderboard [page]` | Everyone | Top 25 Tenno (button pagination) |
-| `/market browse` | Everyone | Browse Tenno Market (quick-buy menu) |
-| `/market buy <item>` | Everyone | Purchase (with autocomplete) |
-| `/market inventory` | Everyone | View Arsenal |
+| `/market` | Everyone | Browse Tenno Market (quick-buy menu + inventory) |
 | `/profile missions` | Everyone | Codex Mission progress |
 | `/profile mastery` | Everyone | Mastery Challenge progress |
 | `/admin shop add\|edit\|remove\|restock` | ManageGuild | Shop CRUD |
 | `/admin config get\|set` | ManageGuild | Runtime config |
 | `/admin event create` | ManageGuild | Create Tactical Alert |
 | `/admin grant ap` | ManageGuild | Direct AP grant |
+| `/admin quest create\|edit\|remove\|list` | ManageGuild | Quest CRUD |
+| `/admin achievement create\|edit\|remove` | ManageGuild | Achievement CRUD |
 
 ## Webhook Leaderboard Setup
 
@@ -181,7 +180,8 @@ To enable the auto-updating persistent leaderboard:
 1. In your Discord server, go to a channel → Edit Channel → Integrations → Webhooks → New Webhook
 2. Copy the webhook URL
 3. Set `LEADERBOARD_WEBHOOK_URL` in your `.env` file
-4. The bot will post a leaderboard message on startup and update it daily at midnight UTC
+4. Set `LEADERBOARD_CHANNEL_ID` to the target channel ID
+5. The bot will post a leaderboard message on startup and update it daily at midnight UTC
 
 ## Bot Verification Documents
 

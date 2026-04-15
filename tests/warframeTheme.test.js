@@ -22,9 +22,9 @@ describe('warframeTheme', () => {
   });
 
   it('randomFlavor returns a string from the pool', () => {
-    const result = randomFlavor('DAILY_CLAIM');
+    const result = randomFlavor('PURCHASE');
     expect(typeof result).toBe('string');
-    expect(Flavor.DAILY_CLAIM).toContain(result);
+    expect(Flavor.PURCHASE).toContain(result);
   });
 
   it('randomFlavor returns empty string for unknown category', () => {
