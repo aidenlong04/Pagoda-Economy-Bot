@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  EARN
+  SPEND
+}
+
+enum TransactionSource {
+  QUEST
+  SHOP
+  EVENT
+  ADMIN_GRANT
+  ACHIEVEMENT
+  MESSAGE
+  VOICE
+}
+
+enum ShopActionType {
+  ROLE_GRANT
+  CUSTOM_RESPONSE
+  INVENTORY_ITEM
+}
+
+enum QuestType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+enum RecurringSchedule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum RequirementType {
+  MESSAGE_COUNT
+  REACTION_COUNT
+  VOICE_MINUTES
+  URL_CLICKS
+  CUSTOM
+}
+
+enum AchievementCategory {
+  EARNING
+  SPENDING
+  ACTIVITY
+  QUEST
+}
+
+enum EventConditionType {
+  MIN_UNIQUE_PARTICIPANTS
+  INDIVIDUAL_INTERACTION_THRESHOLD
+}
+
+enum EventStatus {
+  SCHEDULED
+  ACTIVE
+  CLOSED
+}
+
+enum EventInteractionType {
+  MESSAGE
+  REACT
+  URL_CLICK
+}
+
+model User {
+  id                   String             @id @default(cuid())
+  discordId            String             @unique @map("discord_id")
+  balance              Int                @default(0)
+  totalEarned          Int                @default(0) @map("total_earned")
+  totalSpent           Int                @default(0) @map("total_spent")
+  messageCount         Int                @default(0) @map("message_count")
+  reactionCount        Int                @default(0) @map("reaction_count")
+  voiceMinutes         Int                @default(0) @map("voice_minutes")
+  daysActiveStreak     Int                @default(0) @map("days_active_streak")
+  lastDailyAt          DateTime?          @map("last_daily_at")
+  questsCompleted      Int                @default(0) @map("quests_completed")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  transactions         Transaction[]
+  purchases            Purchase[]
+  questProgress        QuestProgress[]
+  achievements         UserAchievement[]
+  inventory            UserInventoryItem[]
+  eventInteractions    EventInteraction[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  userId      String            @map("user_id")
+  amount      Int
+  type        TransactionType
+  source      TransactionSource
+  actorId     String?           @map("actor_id")
+  metadata    Json?
+  timestamp   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@map("transactions")
+}
+
+model ShopItem {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String
+  price       Int
+  stock       Int?
+  actionType  ShopActionType  @map("action_type")
+  actionData  Json            @map("action_data")
+  repeatable  Boolean         @default(true)
+  active      Boolean         @default(true)
+  purchases   Purchase[]
+
+  @@map("shop_items")
+}
+
+model Purchase {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  itemId      String    @map("item_id")
+  timestamp   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item        ShopItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, itemId])
+  @@map("purchases")
+}
+
+model Quest {
+  id                String             @id @default(cuid())
+  type              QuestType
+  title             String
+  description       String
+  requirementType   RequirementType    @map("requirement_type")
+  requirementValue  Int                @map("requirement_value")
+  rewardAp          Int                @map("reward_ap")
+  active            Boolean            @default(true)
+  assignedTo        String?            @map("assigned_to")
+  expiresAt         DateTime?          @map("expires_at")
+  recurring         RecurringSchedule  @default(NONE)
+  lastResetAt       DateTime?          @map("last_reset_at")
+  createdBy         String?            @map("created_by")
+  progress          QuestProgress[]
+
+  @@map("quests")
+}
+
+model QuestProgress {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  questId       String    @map("quest_id")
+  progress      Int       @default(0)
+  completed     Boolean   @default(false)
+  completedAt   DateTime? @map("completed_at")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest         Quest     @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questId])
+  @@map("quest_progress")
+}
+
+model Achievement {
+  id             String               @id @default(cuid())
+  name           String               @unique
+  description    String
+  category       AchievementCategory
+  threshold      Int
+  rewardAp       Int                  @map("reward_ap")
+  rewardRoleId   String?              @map("reward_role_id")
+  createdBy      String?              @map("created_by")
+  users          UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId          String       @map("user_id")
+  achievementId   String       @map("achievement_id")
+  unlockedAt      DateTime     @default(now()) @map("unlocked_at")
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement     Achievement  @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model EconomyEvent {
+  id              String               @id @default(cuid())
+  name            String
+  description     String
+  startTime       DateTime             @map("start_time")
+  endTime         DateTime             @map("end_time")
+  rewardAp        Int                  @map("reward_ap")
+  channelIds      Json                 @map("channel_ids")
+  conditionType   EventConditionType   @map("condition_type")
+  conditionValue  Int                  @map("condition_value")
+  status          EventStatus          @default(SCHEDULED)
+  interactions    EventInteraction[]
+
+  @@map("events")
+}
+
+model EventInteraction {
+  id               String               @id @default(cuid())
+  eventId          String               @map("event_id")
+  userId           String               @map("user_id")
+  interactionType  EventInteractionType @map("interaction_type")
+  timestamp        DateTime             @default(now())
+  event            EconomyEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, userId, timestamp])
+  @@map("event_interactions")
+}
+
+model Config {
+  key        String   @id
+  value      String
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("config")
+}
+
+model UserInventoryItem {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  itemName    String   @map("item_name")
+  quantity    Int      @default(1)
+  metadata    Json?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemName])
+  @@map("user_inventory_items")
+}

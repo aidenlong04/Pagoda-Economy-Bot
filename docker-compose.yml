@@ -1,0 +1,59 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pagoda_economy
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    # ── Resource limits: small-guild bot needs minimal Postgres resources ──
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    command: >
+      postgres
+        -c shared_buffers=64MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c effective_cache_size=128MB
+        -c max_connections=20
+        -c wal_buffers=4MB
+        -c checkpoint_completion_target=0.9
+        -c random_page_cost=1.1
+    shm_size: '128mb'
+
+  bot:
+    build: .
+    depends_on:
+      - db
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    environment:
+      # Constrain V8 heap to 128MB — plenty for a single-guild Discord bot
+      NODE_OPTIONS: "--max-old-space-size=128"
+    # ── Resource limits: bot is lightweight, single-threaded Node.js ──
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    command: sh -c "./setup.sh && npm start"
+
+volumes:
+  pg_data:
