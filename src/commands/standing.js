@@ -1,24 +1,15 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getBalance, claimDaily } = require('../services/economyService');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const prisma = require('../db/prisma');
 const { ensureUser } = require('../services/economyService');
-const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
+const { Colors, Icons, Terms } = require('../config/warframeTheme');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('standing')
-    .setDescription(`View and manage your ${Terms.CURRENCY_NAME}.`)
-    .addSubcommand((sub) => sub
-      .setName('view')
-      .setDescription(`Show your ${Terms.CURRENCY_NAME} balance.`))
-    .addSubcommand((sub) => sub
-      .setName('daily')
-      .setDescription(`Claim your ${Terms.DAILY} reward.`)),
+    .setDescription(`View your ${Terms.CURRENCY_NAME}.`),
 
   async execute(interaction) {
-    const sub = interaction.options.getSubcommand();
-    if (sub === 'view') return handleView(interaction);
-    if (sub === 'daily') return handleDaily(interaction);
+    return handleView(interaction);
   }
 };
 
@@ -39,8 +30,7 @@ async function handleView(interaction) {
     .setDescription(`<@${interaction.user.id}>\n\n**${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`)
     .addFields(
       { name: 'Total Earned', value: `${user.totalEarned.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },
-      { name: 'Total Spent', value: `${user.totalSpent.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true },
-      { name: 'Daily Streak', value: `🔥 ${user.daysActiveStreak} day${user.daysActiveStreak !== 1 ? 's' : ''}`, inline: true }
+      { name: 'Total Spent', value: `${user.totalSpent.toLocaleString()} ${Terms.CURRENCY_ABBREV}`, inline: true }
     )
     .setFooter({ text: Terms.CURRENCY_NAME })
     .setTimestamp();
@@ -54,51 +44,5 @@ async function handleView(interaction) {
     embed.addFields({ name: 'Recent Activity', value: txnLines.join('\n') });
   }
 
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('standing:daily')
-      .setLabel(`Claim ${Terms.DAILY}`)
-      .setStyle(ButtonStyle.Success)
-      .setEmoji('🎁')
-  );
-
-  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-}
-
-async function handleDaily(interaction) {
-  const result = await claimDaily(interaction.user.id);
-
-  if (!result.claimed) {
-    const hours = Math.floor(result.remainingSeconds / 3600);
-    const minutes = Math.floor((result.remainingSeconds % 3600) / 60);
-    const embed = new EmbedBuilder()
-      .setColor(Colors.WARNING)
-      .setAuthor({ name: Terms.DAILY, iconURL: Icons.LOTUS })
-      .setDescription(`You've already collected today's tribute.\nTry again in **${hours}h ${minutes}m**.`)
-      .setTimestamp();
-    return interaction.reply({ embeds: [embed], ephemeral: true });
-  }
-
-  let description = `**+${result.reward.toLocaleString()} ${Terms.CURRENCY_ABBREV}**`;
-  if (result.bonus > 0) {
-    description += `\n*Base: ${result.baseReward} + Streak Bonus: ${result.bonus}*`;
-  }
-  description += `\n🔥 **${result.streak}-day streak!**`;
-  description += `\n\n*${randomFlavor('DAILY_CLAIM')}*`;
-
-  const embed = new EmbedBuilder()
-    .setColor(Colors.SUCCESS)
-    .setAuthor({ name: Terms.DAILY, iconURL: Icons.LOTUS })
-    .setDescription(description)
-    .setTimestamp();
-
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('standing:view')
-      .setLabel('View Balance')
-      .setStyle(ButtonStyle.Secondary)
-      .setEmoji('💰')
-  );
-
-  return interaction.reply({ embeds: [embed], components: [row] });
+  await interaction.reply({ embeds: [embed], ephemeral: true });
 }

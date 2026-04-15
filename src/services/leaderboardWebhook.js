@@ -34,7 +34,6 @@ function buildWebhookLeaderboardEmbed(users) {
       if (user.totalEarned > 0) stats.push(`📈 ${user.totalEarned.toLocaleString()} earned`);
       if (user.messageCount > 0) stats.push(`💬 ${user.messageCount.toLocaleString()} msgs`);
       if (user.questsCompleted > 0) stats.push(`📜 ${user.questsCompleted} quests`);
-      if (user.daysActiveStreak > 1) stats.push(`🔥 ${user.daysActiveStreak}d streak`);
       const statLine = stats.length > 0 ? `\n> ${stats.join(' • ')}` : '';
       return `${medal} <@${user.discordId}> — **${user.balance.toLocaleString()} ${Terms.CURRENCY_ABBREV}**${statLine}`;
     });
@@ -42,6 +41,10 @@ function buildWebhookLeaderboardEmbed(users) {
   }
 
   return embed;
+}
+
+function getLeaderboardChannelId() {
+  return process.env.LEADERBOARD_CHANNEL_ID || null;
 }
 
 function createWebhookClient() {
@@ -97,5 +100,6 @@ async function updateWebhookLeaderboard() {
 module.exports = {
   buildWebhookLeaderboardEmbed,
   updateWebhookLeaderboard,
+  getLeaderboardChannelId,
   CONFIG_KEY
 };

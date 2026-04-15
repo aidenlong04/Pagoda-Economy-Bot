@@ -10,7 +10,6 @@ datasource db {
 enum TransactionType {
   EARN
   SPEND
-  TRANSFER
 }
 
 enum TransactionSource {
@@ -18,8 +17,6 @@ enum TransactionSource {
   SHOP
   EVENT
   ADMIN_GRANT
-  TRANSFER
-  DAILY
   ACHIEVEMENT
   MESSAGE
   VOICE
