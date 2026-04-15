@@ -2,13 +2,36 @@ const prisma = require('../db/prisma');
 const mapping = require('../models/achievementDefinitions');
 const { grantAp } = require('./economyService');
 
+// ── Achievement definition cache ───────────────────────────────────────────
+// Achievement definitions rarely change; cache them for 2 minutes to avoid
+// hitting the DB on every message/reaction/voice event.
+let achievementCache = null;
+let achievementCacheExpiresAt = 0;
+const ACHIEVEMENT_CACHE_TTL_MS = 120_000; // 2 minutes
+
+async function getCachedAchievements() {
+  const now = Date.now();
+  if (achievementCache && now < achievementCacheExpiresAt) {
+    return achievementCache;
+  }
+  achievementCache = await prisma.achievement.findMany({ orderBy: { threshold: 'asc' } });
+  achievementCacheExpiresAt = now + ACHIEVEMENT_CACHE_TTL_MS;
+  return achievementCache;
+}
+
+/** Invalidate the cache (called after admin creates/edits/removes achievements). */
+function invalidateAchievementCache() {
+  achievementCache = null;
+  achievementCacheExpiresAt = 0;
+}
+
 async function evaluateAchievements(discordId, member = null) {
   const user = await prisma.user.findUnique({ where: { discordId } });
   if (!user) {
     return [];
   }
 
-  const achievements = await prisma.achievement.findMany({ orderBy: { threshold: 'asc' } });
+  const achievements = await getCachedAchievements();
   const unlocked = await prisma.userAchievement.findMany({ where: { userId: user.id } });
   const unlockedSet = new Set(unlocked.map((a) => a.achievementId));
 
@@ -59,7 +82,7 @@ async function getAchievementProgress(discordId) {
 // ── Admin CRUD ─────────────────────────────────────────────────────────────
 
 async function createAchievement({ name, description, category, threshold, rewardAp, rewardRoleId, createdBy }) {
-  return prisma.achievement.create({
+  const result = await prisma.achievement.create({
     data: {
       name,
       description,
@@ -70,12 +93,16 @@ async function createAchievement({ name, description, category, threshold, rewar
       createdBy: createdBy || null,
     }
   });
+  invalidateAchievementCache();
+  return result;
 }
 
 async function editAchievement(name, updates) {
   const achievement = await prisma.achievement.findUnique({ where: { name } });
   if (!achievement) throw new Error('Achievement not found');
-  return prisma.achievement.update({ where: { name }, data: updates });
+  const result = await prisma.achievement.update({ where: { name }, data: updates });
+  invalidateAchievementCache();
+  return result;
 }
 
 async function removeAchievement(name) {
@@ -83,7 +110,9 @@ async function removeAchievement(name) {
   if (!achievement) throw new Error('Achievement not found');
   // Delete user unlocks and the achievement itself
   await prisma.userAchievement.deleteMany({ where: { achievementId: achievement.id } });
-  return prisma.achievement.delete({ where: { name } });
+  const result = await prisma.achievement.delete({ where: { name } });
+  invalidateAchievementCache();
+  return result;
 }
 
 async function listAllAchievements() {
@@ -97,4 +126,5 @@ module.exports = {
   editAchievement,
   removeAchievement,
   listAllAchievements,
+  invalidateAchievementCache,
 };

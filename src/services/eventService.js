@@ -99,24 +99,43 @@ async function trackEventClick(eventId, discordId, interactionType = 'URL_CLICK'
   return { tracked: true };
 }
 
-async function recordChannelInteraction(discordChannelId, discordUserId, interactionType) {
-  const now = new Date();
-  const events = await prisma.economyEvent.findMany({
+// ── Active event cache ─────────────────────────────────────────────────────
+// recordChannelInteraction runs on every message. Caching active events avoids
+// a DB query per message when no events are running (the common case).
+let activeEventCache = null;
+let activeEventCacheExpiresAt = 0;
+const ACTIVE_EVENT_CACHE_TTL_MS = 30_000; // 30 seconds
+
+async function getActiveEvents() {
+  const now = Date.now();
+  if (activeEventCache && now < activeEventCacheExpiresAt) {
+    return activeEventCache;
+  }
+  const dbNow = new Date();
+  activeEventCache = await prisma.economyEvent.findMany({
     where: {
       status: { in: ['ACTIVE', 'SCHEDULED'] },
-      startTime: { lte: now },
-      endTime: { gte: now }
+      startTime: { lte: dbNow },
+      endTime: { gte: dbNow }
     }
   });
+  activeEventCacheExpiresAt = now + ACTIVE_EVENT_CACHE_TTL_MS;
+  return activeEventCache;
+}
+
+async function recordChannelInteraction(discordChannelId, discordUserId, interactionType) {
+  const events = await getActiveEvents();
+  if (events.length === 0) return; // Fast path: no active events
 
   const targets = events.filter((event) => Array.isArray(event.channelIds) && event.channelIds.includes(discordChannelId));
   if (!targets.length) {
     return;
   }
 
-  for (const event of targets) {
-    await trackEventClick(event.id, discordUserId, interactionType);
-  }
+  // Record interactions in parallel for multiple matching events
+  await Promise.all(
+    targets.map((event) => trackEventClick(event.id, discordUserId, interactionType))
+  );
 }
 
 /**
@@ -143,13 +162,16 @@ async function closeExpiredEvents() {
     }
 
     const qualifiedUserIds = computeQualifiedUsers(event, userCounts, userCounts.size);
+
+    // Batch-fetch all qualified users in a single query instead of N individual lookups
+    const qualifiedUsers = qualifiedUserIds.length > 0
+      ? await prisma.user.findMany({ where: { id: { in: qualifiedUserIds } } })
+      : [];
+
     const qualifiedDiscordIds = [];
-    for (const userId of qualifiedUserIds) {
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (user) {
-        await grantAp(user.discordId, event.rewardAp, 'EVENT', 'system', { eventId: event.id, eventName: event.name });
-        qualifiedDiscordIds.push(user.discordId);
-      }
+    for (const user of qualifiedUsers) {
+      await grantAp(user.discordId, event.rewardAp, 'EVENT', 'system', { eventId: event.id, eventName: event.name });
+      qualifiedDiscordIds.push(user.discordId);
     }
 
     await prisma.economyEvent.update({ where: { id: event.id }, data: { status: 'CLOSED' } });

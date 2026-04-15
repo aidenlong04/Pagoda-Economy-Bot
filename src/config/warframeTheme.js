@@ -26,7 +26,7 @@ const Colors = {
 // Alliance Standing icon across all economy/standing embeds.
 // Other icons are public Warframe community CDN assets.
 const Icons = {
-  PAGODA_EMBLEM: 'https://ik.imagekit.io/qcxbyrkgu/Golden_Pagoda_Emblem-clear.png?updatedAt=1752791247987',
+  PAGODA_EMBLEM: 'https://github.com/user-attachments/assets/0271f28e-83e5-44af-82c6-b787f31df8f6',
   LOTUS:         'https://cdn.warframestat.us/img/lotus.png',
   TENNO:         'https://cdn.warframestat.us/img/tenno.png',
   ALLIANCE:      'https://cdn.warframestat.us/img/alliance.png',

@@ -37,10 +37,22 @@ function createBot() {
   client.on('messageReactionAdd', onMessageReactionAdd);
   client.on('voiceStateUpdate', onVoiceStateUpdate);
 
+  // ── Cron: mutex guard to prevent overlapping scheduler ticks ──────────
+  // Large-scale bots (Dyno, Carl) use lock guards to prevent concurrent
+  // cron executions when a tick runs longer than the interval.
+  let cronRunning = false;
+
   // Cron: every minute, check for event state transitions + quest expiry/reset
   cron.schedule('* * * * *', async () => {
+    if (cronRunning) return; // Skip if previous tick is still processing
+    cronRunning = true;
     try {
-      const status = await closeExpiredEvents();
+      // Run event close + quest maintenance in parallel (independent operations)
+      const [status, expired, reset] = await Promise.all([
+        closeExpiredEvents(),
+        deactivateExpiredQuests(),
+        resetRecurringQuests()
+      ]);
 
       // Post rich summary embeds to each event's monitored channels
       for (const result of status.closed) {
@@ -56,21 +68,18 @@ function createBot() {
         }
       }
 
-      if (status.activated || status.closed.length) {
-        logger.info('Processed event scheduler tick', {
-          activated: status.activated,
-          closed: status.closed.length,
+      if (status.activated || status.closed.length || expired || reset) {
+        logger.info('Scheduler tick', {
+          eventsActivated: status.activated,
+          eventsClosed: status.closed.length,
+          questsExpired: expired,
+          questsReset: reset,
         });
-      }
-
-      // Deactivate expired quests and reset recurring quest progress
-      const expired = await deactivateExpiredQuests();
-      const reset = await resetRecurringQuests();
-      if (expired || reset) {
-        logger.info('Quest maintenance tick', { expired, reset });
       }
     } catch (error) {
       logger.error('Event scheduler failed', { error: error.message });
+    } finally {
+      cronRunning = false;
     }
   });
 

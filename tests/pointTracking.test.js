@@ -31,3 +31,18 @@ describe('defaultConfig point tracking settings', () => {
     }
   });
 });
+
+describe('voice session cap', () => {
+  it('exports MAX_SESSION_MS as 8 hours', () => {
+    const { _MAX_SESSION_MS } = require('../src/events/voiceStateUpdate');
+    expect(_MAX_SESSION_MS).toBe(8 * 60 * 60 * 1000);
+  });
+});
+
+describe('config service cache', () => {
+  it('exports getConfigBatch and clearConfigCache', () => {
+    const { getConfigBatch, clearConfigCache } = require('../src/services/configService');
+    expect(typeof getConfigBatch).toBe('function');
+    expect(typeof clearConfigCache).toBe('function');
+  });
+});

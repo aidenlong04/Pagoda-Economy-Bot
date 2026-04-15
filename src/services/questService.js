@@ -54,13 +54,27 @@ async function incrementQuestProgress(discordId, requirementType, amount = 1) {
     }
   });
 
+  if (quests.length === 0) return [];
+
+  // Batch-fetch existing progress for all matching quests in a single query
+  const questIds = quests.map((q) => q.id);
+  const existingProgress = await prisma.questProgress.findMany({
+    where: { userId: user.id, questId: { in: questIds } }
+  });
+  const progressMap = new Map(existingProgress.map((p) => [p.questId, p]));
+
   const completed = [];
   for (const quest of quests) {
-    const progress = await prisma.questProgress.upsert({
-      where: { userId_questId: { userId: user.id, questId: quest.id } },
-      update: { progress: { increment: amount } },
-      create: { userId: user.id, questId: quest.id, progress: amount }
-    });
+    const existing = progressMap.get(quest.id);
+
+    const progress = existing
+      ? await prisma.questProgress.update({
+          where: { id: existing.id },
+          data: { progress: { increment: amount } }
+        })
+      : await prisma.questProgress.create({
+          data: { userId: user.id, questId: quest.id, progress: amount }
+        });
 
     if (!progress.completed && progress.progress >= quest.requirementValue) {
       await prisma.questProgress.update({
