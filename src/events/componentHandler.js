@@ -3,8 +3,7 @@
  * Each handler receives the interaction and performs the appropriate action.
  */
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { getLeaderboard, ensureUser } = require('../services/economyService');
-const prisma = require('../db/prisma');
+const { getLeaderboard } = require('../services/economyService');
 const { getQuestsForUser } = require('../services/questService');
 const { getAchievementProgress } = require('../services/achievementService');
 const { listShopItems, buyItem, getInventory } = require('../services/shopService');

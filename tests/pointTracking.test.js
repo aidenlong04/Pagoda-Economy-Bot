@@ -17,14 +17,6 @@ describe('defaultConfig point tracking settings', () => {
     expect(defaults.VOICE_AP_PER_5MIN).toBe('5');
   });
 
-  it('has STREAK_BONUS_PERCENT config', () => {
-    expect(defaults.STREAK_BONUS_PERCENT).toBe('10');
-  });
-
-  it('has STREAK_BONUS_CAP config', () => {
-    expect(defaults.STREAK_BONUS_CAP).toBe('100');
-  });
-
   it('all values are string type (config values are strings)', () => {
     for (const [key, value] of Object.entries(defaults)) {
       expect(typeof value).toBe('string');

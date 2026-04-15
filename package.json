@@ -9,6 +9,8 @@
     "dev": "node src/index.js",
     "test": "vitest run --globals",
     "test:watch": "vitest --globals",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "node prisma/seed.js",
@@ -32,6 +34,8 @@
     "prisma": "6.19.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
     "supertest": "7.1.4",
     "vitest": "4.1.4"
   }

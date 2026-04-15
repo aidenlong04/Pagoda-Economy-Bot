@@ -26,9 +26,10 @@ describe('command registry', () => {
     expect(json.default_member_permissions).toBe('32');
   });
 
-  it('market command has autocomplete handler', () => {
+  it('market command is a simple command with no subcommands', () => {
     const market = commands.find((cmd) => cmd.data.name === 'market');
-    expect(typeof market.autocomplete).toBe('function');
+    const json = market.data.toJSON();
+    expect(json.options).toEqual([]);
   });
 
   it('admin command has shop, config, event, grant, quest, and achievement subcommand groups', () => {
@@ -38,12 +39,11 @@ describe('command registry', () => {
     expect(groupNames).toEqual(['achievement', 'config', 'event', 'grant', 'quest', 'shop']);
   });
 
-  it('standing command has view and daily subcommands', () => {
+  it('standing command is a simple command with no subcommands', () => {
     const standing = commands.find((cmd) => cmd.data.name === 'standing');
     expect(standing).toBeDefined();
     const json = standing.data.toJSON();
-    const subNames = json.options.map((o) => o.name).sort();
-    expect(subNames).toEqual(['daily', 'view']);
+    expect(json.options).toEqual([]);
   });
 
   it('profile command has missions and mastery subcommands', () => {

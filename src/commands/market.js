@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-const { listShopItems, buyItem, getInventory } = require('../services/shopService');
-const { Colors, Icons, Terms, randomFlavor } = require('../config/warframeTheme');
+const { listShopItems } = require('../services/shopService');
+const { Colors, Icons, Terms } = require('../config/warframeTheme');
 
 const ACTION_LABELS = {
   ROLE_GRANT: '🏷️ Role',

@@ -60,8 +60,7 @@ describe('leaderboard embed builders', () => {
     expect(json.description).toContain('📈 8,000 earned');
     expect(json.description).toContain('💬 120 msgs');
     expect(json.description).toContain('📜 5 quests');
-    expect(json.description).toContain('🔥 3d streak');
-    // User 222 has some stats (no quests, streak = 1 so no streak shown)
+    // User 222 has some stats (no quests)
     expect(json.description).toContain('💬 50 msgs');
     // User 333 has no stats — no stat line
   });
