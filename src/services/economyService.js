@@ -66,7 +66,14 @@ async function getLeaderboard(page = 1, limit = 25) {
   return prisma.user.findMany({
     orderBy: [{ balance: 'desc' }, { createdAt: 'asc' }],
     skip,
-    take: limit
+    take: limit,
+    select: {
+      discordId: true,
+      balance: true,
+      totalEarned: true,
+      messageCount: true,
+      questsCompleted: true,
+    }
   });
 }
 

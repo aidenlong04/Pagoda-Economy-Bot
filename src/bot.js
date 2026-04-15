@@ -41,10 +41,20 @@ function createBot() {
   // Large-scale bots (Dyno, Carl) use lock guards to prevent concurrent
   // cron executions when a tick runs longer than the interval.
   let cronRunning = false;
+  let consecutiveNoOps = 0; // Track idle ticks to reduce DB polling
 
   // Cron: every minute, check for event state transitions + quest expiry/reset
+  // Consecutive no-op ticks increment a counter; after 5 idle ticks the scheduler
+  // sleeps for that tick to reduce DB polling (effectively runs every 2 min when idle).
   cron.schedule('* * * * *', async () => {
     if (cronRunning) return; // Skip if previous tick is still processing
+
+    // When no work has been done for 5+ consecutive ticks, skip every other tick
+    if (consecutiveNoOps >= 5 && consecutiveNoOps % 2 === 1) {
+      consecutiveNoOps++;
+      return;
+    }
+
     cronRunning = true;
     try {
       // Run event close + quest maintenance in parallel (independent operations)
@@ -69,12 +79,15 @@ function createBot() {
       }
 
       if (status.activated || status.closed.length || expired || reset) {
+        consecutiveNoOps = 0; // Reset idle counter when work was done
         logger.info('Scheduler tick', {
           eventsActivated: status.activated,
           eventsClosed: status.closed.length,
           questsExpired: expired,
           questsReset: reset,
         });
+      } else {
+        consecutiveNoOps++;
       }
     } catch (error) {
       logger.error('Event scheduler failed', { error: error.message });

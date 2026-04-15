@@ -9,6 +9,8 @@ const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development'
     ? [{ emit: 'stdout', level: 'query' }]
     : [],
+  // Disable Prisma metrics in production to reduce CPU overhead
+  ...(process.env.NODE_ENV !== 'development' && { errorFormat: 'minimal' }),
 });
 
 module.exports = prisma;

@@ -16,11 +16,16 @@ module.exports = {
 async function handleView(interaction) {
   const user = await ensureUser(interaction.user.id);
 
-  // Fetch recent transactions (last 5)
+  // Fetch recent transactions in parallel with user data (user already fetched above for upsert)
   const recentTxns = await prisma.transaction.findMany({
     where: { userId: user.id },
     orderBy: { timestamp: 'desc' },
-    take: 5
+    take: 5,
+    select: {
+      amount: true,
+      source: true,
+      timestamp: true,
+    }
   });
 
   const embed = new EmbedBuilder()

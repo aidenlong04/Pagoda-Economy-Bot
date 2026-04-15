@@ -9,6 +9,16 @@ const logger = require('../logger');
 // Per-user cooldown map: discordId -> last AP grant timestamp (ms)
 const messageCooldowns = new Map();
 
+// Periodically sweep stale cooldown entries to prevent unbounded memory growth
+// in large servers (same pattern as discord.js cache sweepers).
+const COOLDOWN_SWEEP_INTERVAL_MS = 10 * 60 * 1000; // every 10 min
+setInterval(() => {
+  const cutoff = Date.now() - 120_000; // entries older than 2 min are stale
+  for (const [key, ts] of messageCooldowns) {
+    if (ts < cutoff) messageCooldowns.delete(key);
+  }
+}, COOLDOWN_SWEEP_INTERVAL_MS).unref(); // unref so it doesn't prevent shutdown
+
 module.exports = async function onMessageCreate(message) {
   if (!message.guild || message.author.bot) {
     return;

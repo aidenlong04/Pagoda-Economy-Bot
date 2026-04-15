@@ -12,13 +12,14 @@ module.exports = async function onMessageReactionAdd(reaction, user) {
     return;
   }
 
-  // Track reaction count on user model
-  await prisma.user.upsert({
-    where: { discordId: user.id },
-    update: { reactionCount: { increment: 1 } },
-    create: { discordId: user.id, reactionCount: 1 }
-  });
-
-  await incrementQuestProgress(user.id, 'REACTION_COUNT', 1);
-  await recordChannelInteraction(reaction.message.channel.id, user.id, 'REACT');
+  // Run all three operations in parallel — they are independent
+  await Promise.all([
+    prisma.user.upsert({
+      where: { discordId: user.id },
+      update: { reactionCount: { increment: 1 } },
+      create: { discordId: user.id, reactionCount: 1 }
+    }),
+    incrementQuestProgress(user.id, 'REACTION_COUNT', 1),
+    recordChannelInteraction(reaction.message.channel.id, user.id, 'REACT')
+  ]);
 };
